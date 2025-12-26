@@ -14,6 +14,7 @@ const JournalNew = () => {
   const [isListening, setIsListening] = useState(false)
   const [voiceSupported, setVoiceSupported] = useState(false)
   const recognitionRef = useRef(null)
+  const finalTranscriptRef = useRef('') // Store final transcript separately
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -21,64 +22,116 @@ const JournalNew = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       setVoiceSupported(true)
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-      recognitionRef.current = new SpeechRecognition()
-      recognitionRef.current.continuous = true
-      recognitionRef.current.interimResults = true
-      recognitionRef.current.lang = 'en-US'
+      
+      try {
+        recognitionRef.current = new SpeechRecognition()
+        recognitionRef.current.continuous = true
+        recognitionRef.current.interimResults = true
+        recognitionRef.current.lang = 'en-US' // Can be changed to 'ur-PK' for Urdu
 
-      recognitionRef.current.onresult = (event) => {
-        let interimTranscript = ''
-        let finalTranscript = ''
+        recognitionRef.current.onresult = (event) => {
+          let interimTranscript = ''
+          let finalTranscript = ''
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' '
-          } else {
-            interimTranscript += transcript
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' '
+            } else {
+              interimTranscript += transcript
+            }
+          }
+
+          // Update final transcript
+          if (finalTranscript) {
+            finalTranscriptRef.current += finalTranscript
+            setText(finalTranscriptRef.current + interimTranscript)
+          } else if (interimTranscript) {
+            // Show final + interim in real-time
+            setText(finalTranscriptRef.current + interimTranscript)
           }
         }
 
-        if (finalTranscript) {
-          setText(prev => prev + finalTranscript)
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error:', event.error)
+          setIsListening(false)
+          
+          let errorMessage = 'Speech recognition error occurred.'
+          switch (event.error) {
+            case 'no-speech':
+              errorMessage = 'No speech detected. Please speak clearly and try again.'
+              break
+            case 'not-allowed':
+              errorMessage = 'Microphone access denied. Please allow microphone permissions in your browser settings.'
+              break
+            case 'audio-capture':
+              errorMessage = 'No microphone found. Please connect a microphone.'
+              break
+            case 'network':
+              errorMessage = 'Network error. Please check your internet connection.'
+              break
+            case 'aborted':
+              // User stopped manually, don't show error
+              return
+            default:
+              errorMessage = `Speech recognition error: ${event.error}`
+          }
+          setError(errorMessage)
         }
-      }
 
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error)
-        setIsListening(false)
-        if (event.error === 'no-speech') {
-          setError('No speech detected. Please try again.')
-        } else if (event.error === 'not-allowed') {
-          setError('Microphone access denied. Please allow microphone permissions.')
+        recognitionRef.current.onend = () => {
+          setIsListening(false)
         }
-      }
 
-      recognitionRef.current.onend = () => {
-        setIsListening(false)
+        recognitionRef.current.onstart = () => {
+          setError('')
+        }
+      } catch (err) {
+        console.error('Failed to initialize speech recognition:', err)
+        setVoiceSupported(false)
+        setError('Failed to initialize voice recognition. Please refresh the page.')
       }
+    } else {
+      setVoiceSupported(false)
     }
 
     return () => {
       if (recognitionRef.current) {
-        recognitionRef.current.stop()
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // Ignore errors on cleanup
+        }
       }
     }
   }, [])
 
   const toggleVoiceInput = () => {
     if (!voiceSupported) {
-      setError('Voice input is not supported in your browser.')
+      setError('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.')
       return
     }
 
     if (isListening) {
-      recognitionRef.current.stop()
-      setIsListening(false)
+      try {
+        recognitionRef.current.stop()
+        setIsListening(false)
+      } catch (err) {
+        console.error('Error stopping recognition:', err)
+        setIsListening(false)
+      }
     } else {
       setError('')
-      recognitionRef.current.start()
-      setIsListening(true)
+      // Reset final transcript when starting new session
+      finalTranscriptRef.current = text
+      try {
+        recognitionRef.current.start()
+        setIsListening(true)
+      } catch (err) {
+        console.error('Error starting recognition:', err)
+        setError('Failed to start voice recognition. Please try again.')
+        setIsListening(false)
+      }
     }
   }
 
@@ -204,60 +257,261 @@ const JournalNew = () => {
                   <span>Journal Entry <span className="text-red-500">*</span></span>
                 </label>
 
-                {/* Voice Input Button */}
-                <motion.button
-                  type="button"
-                  onClick={toggleVoiceInput}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    isListening
-                      ? 'bg-red-500 text-white shadow-lg'
-                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                  }`}
-                  disabled={!voiceSupported}
-                >
-                  {isListening ? (
-                    <>
+                {/* Sleek & Amazing Voice Input Button */}
+                {voiceSupported ? (
+                  <motion.button
+                    type="button"
+                    onClick={toggleVoiceInput}
+                    whileHover={{ 
+                      scale: 1.08, 
+                      boxShadow: isListening 
+                        ? "0 0 30px rgba(239, 68, 68, 0.5)" 
+                        : "0 10px 30px rgba(139, 92, 246, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.92 }}
+                    className={`relative overflow-hidden flex items-center gap-3 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 border-2 ${
+                      isListening
+                        ? 'bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white shadow-2xl shadow-red-500/60 border-red-300'
+                        : 'bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 text-white shadow-xl shadow-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/50 border-purple-300'
+                    }`}
+                  >
+                    {/* Animated shimmer background */}
+                    {!isListening && (
                       <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
-                        </svg>
-                      </motion.div>
-                      <span>Stop</span>
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                      </svg>
-                      <span>Voice</span>
-                    </>
-                  )}
-                </motion.button>
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{
+                          x: ['-200%', '200%'],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatDelay: 1,
+                          ease: "easeInOut"
+                        }}
+                      />
+                    )}
+
+                    {/* Animated pulsing background when listening */}
+                    {isListening && (
+                      <>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-500 to-red-600"
+                          animate={{
+                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                          style={{
+                            backgroundSize: '200% 200%',
+                          }}
+                        />
+                        {/* Pulsing rings */}
+                        <motion.div
+                          className="absolute inset-0 rounded-2xl border-2 border-white/40"
+                          animate={{
+                            scale: [1, 1.1, 1],
+                            opacity: [0.6, 0.3, 0.6],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      </>
+                    )}
+                    
+                    {/* Content with icon and text */}
+                    <div className="relative z-10 flex items-center gap-3">
+                      {isListening ? (
+                        <>
+                          {/* Animated pulsing microphone icon */}
+                          <motion.div
+                            className="relative"
+                            animate={{ 
+                              scale: [1, 1.15, 1],
+                            }}
+                            transition={{ 
+                              duration: 1, 
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            {/* Multiple pulse rings */}
+                            {[0, 0.3, 0.6].map((delay, idx) => (
+                              <motion.div
+                                key={idx}
+                                className="absolute inset-0 rounded-full bg-white/50"
+                                animate={{
+                                  scale: [1, 2, 2],
+                                  opacity: [0.6, 0, 0],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  ease: "easeOut",
+                                  delay: delay
+                                }}
+                              />
+                            ))}
+                            <svg className="w-6 h-6 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                            </svg>
+                          </motion.div>
+                          <span className="font-bold tracking-wide">Stop</span>
+                        </>
+                      ) : (
+                        <>
+                          {/* Elegant microphone icon */}
+                          <motion.div
+                            whileHover={{ 
+                              rotate: [0, -15, 15, -15, 0],
+                              scale: [1, 1.1, 1]
+                            }}
+                            transition={{ duration: 0.6 }}
+                            className="relative"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                            {/* Subtle glow effect */}
+                            <motion.div
+                              className="absolute inset-0 bg-white/20 rounded-full blur-md"
+                              animate={{
+                                opacity: [0.3, 0.6, 0.3],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            />
+                          </motion.div>
+                          <span className="font-bold tracking-wide">Voice</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Top shine effect */}
+                    <motion.div
+                      className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent"
+                      animate={isListening ? {
+                        opacity: [0.3, 0.6, 0.3],
+                      } : {}}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.button>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-500 text-xs border border-gray-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Not supported</span>
+                  </div>
+                )}
               </div>
 
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                rows={12}
-                required
-                placeholder="Write about your thoughts, feelings, or experiences... Or click the Voice button to speak. This is your safe space."
-                className="input-modern resize-none font-serif"
-              />
+              <div className="relative">
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={12}
+                  required
+                  placeholder={isListening 
+                    ? "Speak now... Your words will appear here as you speak." 
+                    : "Write about your thoughts, feelings, or experiences... Or click 'Start Voice Input' to speak. This is your safe space."}
+                  className="input-modern resize-none font-serif"
+                  disabled={isListening && !text} // Allow editing while listening if text exists
+                />
+                {isListening && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute top-4 right-4 flex items-center gap-3 bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl shadow-red-500/50 backdrop-blur-md border-2 border-white/30 z-20"
+                  >
+                    {/* Multiple animated pulse rings */}
+                    <div className="absolute inset-0 rounded-full overflow-hidden">
+                      {[0, 0.2, 0.4].map((delay, idx) => (
+                        <motion.div
+                          key={idx}
+                          className="absolute inset-0 rounded-full bg-white/40"
+                          animate={{
+                            scale: [1, 1.6, 1.6],
+                            opacity: [0.6, 0, 0],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeOut",
+                            delay: delay
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Pulsing dot */}
+                    <motion.span
+                      animate={{ 
+                        scale: [1, 1.4, 1],
+                        opacity: [1, 0.7, 1]
+                      }}
+                      transition={{ 
+                        duration: 1, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      className="relative z-10 w-3 h-3 bg-white rounded-full shadow-lg"
+                    />
+                    
+                    {/* Text with glow */}
+                    <span className="relative z-10 tracking-wide drop-shadow-lg">
+                      Recording...
+                    </span>
+                    
+                    {/* Shimmer effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full"
+                      animate={{
+                        x: ['-100%', '100%'],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.div>
+                )}
+              </div>
               <div className="flex justify-between items-center text-xs text-gray-500 mt-2">
                 <span>{text.length} characters</span>
                 {isListening && (
                   <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-1 text-red-500 font-medium"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 text-red-600 font-semibold"
                   >
-                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                    Listening...
+                    <motion.span
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        opacity: [1, 0.6, 1]
+                      }}
+                      transition={{ 
+                        duration: 1, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-lg"
+                    />
+                    <span className="tracking-wide">Listening... Speak clearly</span>
                   </motion.span>
                 )}
               </div>

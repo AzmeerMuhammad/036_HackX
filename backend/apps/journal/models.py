@@ -4,17 +4,20 @@ from apps.accounts.models import User
 
 
 class JournalEntry(models.Model):
-    """Journal entry with encrypted text and transcription."""
+    """
+    Journal entry with encrypted text.
+    Note: Voice-to-text is handled in the frontend. The backend receives
+    the transcribed text and stores it encrypted.
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='journal_entries')
     checkin_mood = models.CharField(max_length=50, blank=True)
     checkin_intensity = models.FloatField(default=0.0, help_text="0.0 to 1.0")
     
-    # Encrypted fields
+    # Encrypted text field (receives text from frontend, which may come from voice-to-text)
     text_encrypted = encrypt(models.TextField())
-    transcription_encrypted = encrypt(models.TextField(blank=True))
     
-    # Voice file (stored locally in dev)
-    voice_file = models.FileField(upload_to='voice_uploads/', blank=True, null=True)
+    # Optional: Store original transcription if frontend sends it separately
+    transcription_encrypted = encrypt(models.TextField(blank=True, help_text="Original transcription if different from text"))
     
     # AI Analysis results
     ai_summary = models.TextField(blank=True)

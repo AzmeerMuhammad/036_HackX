@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { journalAPI } from '../api/journal'
 import { motion } from 'framer-motion'
+import DataTable from '../components/DataTable'
 
 const JournalHistory = () => {
   const [entries, setEntries] = useState([])
@@ -75,91 +76,152 @@ const JournalHistory = () => {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
-            {entries.map((entry, idx) => (
-              <motion.div
-                key={entry.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white rounded-xl shadow-md p-6"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(entry.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </div>
-                    {entry.checkin_mood && (
-                      <div className="mt-1 text-sm text-gray-700">
-                        Mood: {entry.checkin_mood} ({Math.round(entry.checkin_intensity * 100)}%)
+          <div className="card-3d overflow-hidden">
+            <DataTable
+              columns={[
+                {
+                  key: 'created_at',
+                  label: 'Date & Time',
+                  icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  ),
+                  minWidth: '180px',
+                  render: (value) => (
+                    <div>
+                      <div className="font-medium text-gray-900">
+                        {new Date(value).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
                       </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleDelete(entry.id)}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-
-                {entry.ai_summary && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div className="text-sm font-semibold text-gray-900 mb-1">AI Summary</div>
-                    <div className="text-gray-700">{entry.ai_summary}</div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="text-sm">
-                    <span className="text-gray-600">Sentiment: </span>
-                    <span className={`font-semibold ${entry.sentiment_score >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {entry.sentiment_score > 0 ? '+' : ''}{entry.sentiment_score.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Intensity: </span>
-                    <span className="font-semibold text-primary-600">
-                      {entry.intensity_score.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-
-                {entry.key_themes && entry.key_themes.length > 0 && (
-                  <div className="mb-4">
-                    <div className="text-sm text-gray-600 mb-2">Themes:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {entry.key_themes.map((theme, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-1 bg-primary-100 text-primary-800 rounded-full text-xs"
-                        >
-                          {theme}
-                        </span>
-                      ))}
+                      <div className="text-xs text-gray-500">
+                        {new Date(value).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {entry.risk_flags && Object.values(entry.risk_flags).some(v => v) && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <div className="text-sm font-semibold text-yellow-900 mb-1">Risk Flags</div>
-                    <div className="text-xs text-yellow-800">
-                      {Object.entries(entry.risk_flags)
-                        .filter(([_, value]) => value)
-                        .map(([key, _]) => key.replace('_', ' '))
-                        .join(', ')}
+                  )
+                },
+                {
+                  key: 'checkin_mood',
+                  label: 'Mood',
+                  icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ),
+                  render: (value, row) => (
+                    <div>
+                      {value ? (
+                        <>
+                          <span className="font-medium text-gray-900 capitalize">{value}</span>
+                          <span className="text-xs text-gray-500 ml-2">
+                            ({Math.round((row.checkin_intensity || 0) * 100)}%)
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-gray-400 italic">Not specified</span>
+                      )}
                     </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                  )
+                },
+                {
+                  key: 'sentiment_score',
+                  label: 'Sentiment',
+                  icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  ),
+                  render: (value) => (
+                    <span className={`font-bold text-lg ${
+                      value >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {value > 0 ? '+' : ''}{value.toFixed(2)}
+                    </span>
+                  )
+                },
+                {
+                  key: 'intensity_score',
+                  label: 'Intensity',
+                  icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  ),
+                  render: (value) => (
+                    <span className="font-bold text-lg text-purple-600">
+                      {value.toFixed(2)}
+                    </span>
+                  )
+                },
+                {
+                  key: 'key_themes',
+                  label: 'Themes',
+                  minWidth: '200px',
+                  render: (value) => (
+                    <div className="flex flex-wrap gap-1">
+                      {value && value.length > 0 ? (
+                        value.slice(0, 2).map((theme, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                          >
+                            {theme}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 text-xs italic">None</span>
+                      )}
+                      {value && value.length > 2 && (
+                        <span className="text-xs text-gray-500">+{value.length - 2} more</span>
+                      )}
+                    </div>
+                  )
+                },
+                {
+                  key: 'risk_flags',
+                  label: 'Risk',
+                  render: (value) => {
+                    const hasRisk = value && Object.values(value).some(v => v)
+                    return (
+                      <div>
+                        {hasRisk ? (
+                          <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+                            ⚠️ Flags
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                            ✓ Safe
+                          </span>
+                        )}
+                      </div>
+                    )
+                  }
+                },
+                {
+                  key: 'actions',
+                  label: 'Actions',
+                  render: (_, row) => (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDelete(row.id)
+                      }}
+                      className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+                    >
+                      Delete
+                    </button>
+                  )
+                }
+              ]}
+              data={entries}
+              emptyMessage="No journal entries yet. Create your first entry!"
+            />
           </div>
         )}
       </div>
