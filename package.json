@@ -1,0 +1,15 @@
+{
+  "name": "safespace",
+  "version": "1.0.0",
+  "description": "SafeSpace - Secure AI-powered mental health journaling platform for Pakistan",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd backend && python manage.py runserver",
+    "frontend": "cd frontend && npm run dev",
+    "install-all": "cd backend && pip install -r requirements.txt && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
