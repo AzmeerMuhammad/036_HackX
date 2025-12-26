@@ -42,105 +42,261 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-purple-blue py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Large floating orbs */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute -top-1/2 -left-1/2 w-full h-full bg-white rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-300 rounded-full blur-3xl"
+        />
+
+        {/* Floating particles */}
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-white/40 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, Math.random() * 20 - 10, 0],
+              opacity: [0.2, 0.6, 0.2],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 4,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+
+        {/* Floating gradient circles */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={`circle-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: `${100 + Math.random() * 200}px`,
+              height: `${100 + Math.random() * 200}px`,
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: `radial-gradient(circle, ${
+                i % 3 === 0 ? 'rgba(167, 139, 250, 0.15)' :
+                i % 3 === 1 ? 'rgba(139, 92, 246, 0.1)' :
+                'rgba(79, 172, 254, 0.12)'
+              }, transparent)`,
+            }}
+            animate={{
+              y: [0, -50 - Math.random() * 50, 0],
+              x: [0, Math.random() * 60 - 30, 0],
+              scale: [1, 1.2, 1],
+              opacity: [0.3, 0.6, 0.3],
+            }}
+            transition={{
+              duration: 8 + Math.random() * 6,
+              repeat: Infinity,
+              delay: Math.random() * 3,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+
+        {/* Animated lines/waves */}
+        <motion.div
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(167, 139, 250, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(79, 172, 254, 0.3) 0%, transparent 50%)',
+          }}
+          animate={{
+            backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg"
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full space-y-8 relative z-10"
       >
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Join SafeSpace - Anonymous mode available
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {error}
-            </div>
-          )}
-          <div className="space-y-4">
-            <div>
-              <input
-                type="text"
-                name="username"
-                required
-                value={formData.username}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                placeholder="Username *"
-              />
-            </div>
-            <div>
-              <input
-                type="text"
-                name="display_name"
-                value={formData.display_name}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                placeholder="Display Name (Alias) - Optional"
-              />
-            </div>
-            <div>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                placeholder="Email - Optional"
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                name="password"
-                required
-                value={formData.password}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                placeholder="Password *"
-              />
-            </div>
-            <div>
-              <input
-                type="password"
-                name="password_confirm"
-                required
-                value={formData.password_confirm}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                placeholder="Confirm Password *"
-              />
-            </div>
+        {/* Card */}
+        <div className="bg-white/95 backdrop-blur-lg p-10 rounded-3xl shadow-card-hover">
+          {/* Logo and Title */}
+          <div className="text-center mb-8">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="inline-block mb-4"
+            >
+              <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-xl mx-auto">
+                <span className="text-white text-4xl font-bold">S</span>
+              </div>
+            </motion.div>
+            <h2 className="text-3xl font-bold gradient-text mb-2">
+              Join SafeSpace
+            </h2>
+            <p className="text-gray-600">Create your account - Anonymous mode available</p>
           </div>
 
-          <div>
-            <button
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center space-x-2"
+              >
+                <span>⚠️</span>
+                <span className="text-sm">{error}</span>
+              </motion.div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                  Username <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  name="username"
+                  required
+                  value={formData.username}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="Choose a username"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="display_name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Display Name (Optional)
+                  <span className="text-gray-400 text-xs ml-1">- Use an alias for privacy</span>
+                </label>
+                <input
+                  id="display_name"
+                  type="text"
+                  name="display_name"
+                  value={formData.display_name}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="Your display name or alias"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email (Optional)
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="Create a strong password"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password_confirm" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="password_confirm"
+                  type="password"
+                  name="password_confirm"
+                  required
+                  value={formData.password_confirm}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="Confirm your password"
+                />
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full btn-primary text-base py-4 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
-              {loading ? 'Creating account...' : 'Register'}
-            </button>
-          </div>
+              {loading ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Creating account...</span>
+                </span>
+              ) : (
+                'Create Account'
+              )}
+            </motion.button>
 
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="font-medium text-primary-600 hover:text-primary-500"
-            >
-              Already have an account? Sign in
-            </Link>
-          </div>
-        </form>
+            <div className="text-center pt-4">
+              <Link
+                to="/login"
+                className="font-medium text-primary-600 hover:text-primary-700 transition-colors"
+              >
+                Already have an account? <span className="underline">Sign in</span>
+              </Link>
+            </div>
+          </form>
+        </div>
+
+        {/* Footer Text */}
+        <p className="text-center text-white/80 text-sm">
+          🔒 Your privacy is our priority
+        </p>
       </motion.div>
     </div>
   )
 }
 
 export default Register
-
