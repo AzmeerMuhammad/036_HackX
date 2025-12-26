@@ -4,6 +4,7 @@ import AuthGuard from './components/AuthGuard'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ProfessionalRegister from './pages/ProfessionalRegister'
 import Home from './pages/Home'
 import JournalNew from './pages/JournalNew'
 import JournalHistory from './pages/JournalHistory'
@@ -21,6 +22,7 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/professional/register" element={<ProfessionalRegister />} />
           <Route path="/home" element={<AuthGuard><Home /></AuthGuard>} />
           <Route path="/journal/new" element={<AuthGuard><JournalNew /></AuthGuard>} />
           <Route path="/journal/history" element={<AuthGuard><JournalHistory /></AuthGuard>} />

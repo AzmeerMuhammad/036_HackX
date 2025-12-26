@@ -93,7 +93,10 @@ const Home = () => {
   }
 
   // Check if user is a professional (adjust this check based on your auth context structure)
-  const isProfessional = user?.is_professional || user?.role === 'professional' || user?.user_type === 'professional'
+  const isProfessional = user?.is_professional ||
+                        user?.role === 'professional' ||
+                        user?.user_type === 'professional' ||
+                        user?.professional_type
 
   const containerVariants = {
     hidden: { opacity: 0 },

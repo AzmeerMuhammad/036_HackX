@@ -398,10 +398,9 @@ export default function Landing() {
       description: "Connect with licensed therapists or grow your practice on our secure, compassionate platform. Your journey to mental wellness starts here, in a safe space designed for healing and growth.",
       align: "left",
       actions: [
-        { label: "I'm Seeking Therapy", variant: "primary", to: "/register?type=client" },
-        { label: "I'm a Therapist", variant: "primary", to: "/register?type=therapist" },
-        { label: "Sign In - Client", variant: "secondary", to: "/login?type=client" },
-        { label: "Sign In - Therapist", variant: "secondary", to: "/login?type=therapist" },
+        { label: "I'm Seeking Therapy", variant: "primary", to: "/register" },
+        { label: "I'm a Therapist", variant: "primary", to: "/professional/register" },
+        { label: "Sign In", variant: "secondary", to: "/login" },
       ]
     },
     {
@@ -453,8 +452,8 @@ export default function Landing() {
       description: "Join thousands who have found their path to wellness with SafeSpace. Whether you're seeking support or providing it, you're part of a community dedicated to mental health, healing, and wellbeing. Together, we create a safer space for everyone.",
       align: "center",
       actions: [
-        { label: "Start Your Journey", variant: "primary", to: "/register?type=client" },
-        { label: "Join as a Therapist", variant: "secondary", to: "/register?type=therapist" }
+        { label: "Start Your Journey", variant: "primary", to: "/register" },
+        { label: "Join as a Therapist", variant: "secondary", to: "/professional/register" }
       ]
     }
   ];

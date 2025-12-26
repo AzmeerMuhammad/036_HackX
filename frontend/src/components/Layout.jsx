@@ -8,7 +8,7 @@ const Layout = ({ children }) => {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    navigate('/')
   }
 
   return (

@@ -10,6 +10,7 @@ const Register = () => {
     password_confirm: '',
     display_name: '',
     email: '',
+    is_professional: false,
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -33,6 +34,7 @@ const Register = () => {
 
     try {
       await register(formData)
+      // User registration always redirects to home
       navigate('/home')
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.password?.[0] || 'Registration failed. Please try again.')

@@ -7,6 +7,17 @@ class User(AbstractUser):
     email = models.EmailField(blank=True, null=True)
     display_name = models.CharField(max_length=100, blank=True)
     is_anonymous_mode = models.BooleanField(default=True)
+    is_professional = models.BooleanField(default=False)
+    professional_type = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        choices=[
+            ('psychiatrist', 'Psychiatrist'),
+            ('therapist', 'Therapist'),
+            ('psychologist', 'Psychologist'),
+        ]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

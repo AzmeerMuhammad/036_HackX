@@ -1,50 +1,49 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { authAPI } from '../api/auth'
 import { motion } from 'framer-motion'
 
-const Login = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+const ProfessionalRegister = () => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    password_confirm: '',
+    display_name: '',
+    email: '',
+    is_professional: true,
+    professional_type: '',
+  })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { register } = useAuth()
   const navigate = useNavigate()
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (formData.password !== formData.password_confirm) {
+      setError('Passwords do not match')
+      return
+    }
+
+    if (!formData.professional_type) {
+      setError('Please select your professional type')
+      return
+    }
+
     setLoading(true)
 
     try {
-      // First login to get tokens
-      await login(username, password)
-
-      // Then fetch complete user profile to get all fields including professional status
-      const response = await authAPI.me()
-      const userData = response.data
-
-      // Debug: Log the complete userData
-      console.log('Complete user data from /auth/me/:', userData)
-      console.log('User data (stringified):', JSON.stringify(userData, null, 2))
-
-      // Check if user is a professional and redirect accordingly
-      // Check multiple possible field names and structures
-      const isProfessional = userData?.is_professional === true ||
-                           userData?.role === 'professional' ||
-                           userData?.user_type === 'professional' ||
-                           (userData?.professional_type && userData.professional_type !== '') ||
-                           // Check nested user object in case backend returns different structure
-                           userData?.user?.is_professional === true ||
-                           userData?.user?.professional_type
-
-      console.log('isProfessional:', isProfessional)
-      console.log('Redirecting to:', isProfessional ? '/professional/dashboard' : '/home')
-
-      navigate(isProfessional ? '/professional/dashboard' : '/home')
+      await register(formData)
+      // Always redirect to professional dashboard for professional signup
+      navigate('/professional/dashboard')
     } catch (err) {
-      setError(err.response?.data?.error || 'Login failed. Please try again.')
+      setError(err.response?.data?.error || err.response?.data?.password?.[0] || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -173,12 +172,12 @@ const Login = () => {
               </div>
             </motion.div>
             <h2 className="text-3xl font-bold gradient-text mb-2">
-              Welcome Back
+              Join as a Professional
             </h2>
-            <p className="text-gray-600">Sign in to your SafeSpace account</p>
+            <p className="text-gray-600">Create your professional account</p>
           </div>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-5" onSubmit={handleSubmit}>
             {error && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -186,38 +185,107 @@ const Login = () => {
                 className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center space-x-2"
               >
                 <span>⚠️</span>
-                <span>{error}</span>
+                <span className="text-sm">{error}</span>
               </motion.div>
             )}
 
             <div className="space-y-4">
               <div>
+                <label htmlFor="professional_type" className="block text-sm font-medium text-gray-700 mb-2">
+                  Professional Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="professional_type"
+                  name="professional_type"
+                  required
+                  value={formData.professional_type}
+                  onChange={handleChange}
+                  className="input-modern"
+                >
+                  <option value="">Select your profession</option>
+                  <option value="psychiatrist">Psychiatrist</option>
+                  <option value="therapist">Therapist</option>
+                  <option value="psychologist">Psychologist</option>
+                </select>
+              </div>
+
+              <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
+                  Username <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="username"
                   type="text"
+                  name="username"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={formData.username}
+                  onChange={handleChange}
                   className="input-modern"
-                  placeholder="Enter your username"
+                  placeholder="Choose a username"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="display_name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="display_name"
+                  type="text"
+                  name="display_name"
+                  required
+                  value={formData.display_name}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="Your full name"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="your.email@example.com"
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="password"
                   type="password"
+                  name="password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleChange}
                   className="input-modern"
-                  placeholder="Enter your password"
+                  placeholder="Create a strong password"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password_confirm" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirm Password <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="password_confirm"
+                  type="password"
+                  name="password_confirm"
+                  required
+                  value={formData.password_confirm}
+                  onChange={handleChange}
+                  className="input-modern"
+                  placeholder="Confirm your password"
                 />
               </div>
             </div>
@@ -227,30 +295,30 @@ const Login = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full btn-primary text-base py-4 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden"
+              className="w-full btn-primary text-base py-4 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
               {loading ? (
                 <span className="flex items-center justify-center space-x-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Signing in...</span>
+                  <span>Creating account...</span>
                 </span>
               ) : (
-                'Sign In'
+                'Create Professional Account'
               )}
             </motion.button>
 
             <div className="text-center pt-4 space-y-2">
               <Link
-                to="/register"
+                to="/login"
                 className="block font-medium text-primary-600 hover:text-primary-700 transition-colors"
               >
-                Don't have an account? <span className="underline">Register</span>
+                Already have an account? <span className="underline">Sign in</span>
               </Link>
               <Link
-                to="/professional/register"
+                to="/register"
                 className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Register as a professional instead
+                Register as a user instead
               </Link>
             </div>
           </form>
@@ -258,11 +326,11 @@ const Login = () => {
 
         {/* Footer Text */}
         <p className="text-center text-white/80 text-sm">
-          Your safe space for mental wellness
+          🔒 Your privacy is our priority
         </p>
       </motion.div>
     </div>
   )
 }
 
-export default Login
+export default ProfessionalRegister
