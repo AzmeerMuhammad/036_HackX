@@ -6,8 +6,6 @@ import { motion } from 'framer-motion'
 
 const JournalNew = () => {
   const [text, setText] = useState('')
-  const [checkinMood, setCheckinMood] = useState('')
-  const [checkinIntensity, setCheckinIntensity] = useState(0.5)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
@@ -154,8 +152,8 @@ const JournalNew = () => {
     try {
       const formData = {
         text,
-        checkin_mood: checkinMood,
-        checkin_intensity: checkinIntensity,
+        checkin_mood: '',
+        checkin_intensity: 0.5,
       }
       const response = await journalAPI.create(formData)
       setResult(response.data)
@@ -207,217 +205,10 @@ const JournalNew = () => {
             <div>
               <label className="block text-sm font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                 <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
-                <span>How are you feeling? (Optional)</span>
+                <span>Journal Entry <span className="text-red-500">*</span></span>
               </label>
-              <input
-                type="text"
-                value={checkinMood}
-                onChange={(e) => setCheckinMood(e.target.value)}
-                placeholder="e.g., anxious, calm, happy, overwhelmed"
-                className="input-modern"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <span>Intensity: <span className="font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{Math.round(checkinIntensity * 100)}%</span></span>
-              </label>
-              <div className="relative">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={checkinIntensity}
-                  onChange={(e) => setCheckinIntensity(parseFloat(e.target.value))}
-                  className="w-full h-3 bg-gray-200 rounded-full appearance-none cursor-pointer slider"
-                  style={{
-                    background: `linear-gradient(to right, #F15A2A ${checkinIntensity * 100}%, #e5e7eb ${checkinIntensity * 100}%)`
-                  }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-gray-500 mt-2">
-                <span>Low</span>
-                <span>Medium</span>
-                <span>High</span>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                  <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                  <span>Journal Entry <span className="text-red-500">*</span></span>
-                </label>
-
-                {/* Sleek & Amazing Voice Input Button */}
-                {voiceSupported ? (
-                  <motion.button
-                    type="button"
-                    onClick={toggleVoiceInput}
-                    whileHover={{ 
-                      scale: 1.08, 
-                      boxShadow: isListening 
-                        ? "0 0 30px rgba(239, 68, 68, 0.5)" 
-                        : "0 10px 30px rgba(139, 92, 246, 0.4)"
-                    }}
-                    whileTap={{ scale: 0.92 }}
-                    className={`relative overflow-hidden flex items-center gap-3 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 border-2 ${
-                      isListening
-                        ? 'bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white shadow-2xl shadow-red-500/60 border-red-300'
-                        : 'text-white shadow-xl hover:shadow-2xl'
-                    }`}
-                    style={!isListening ? { background: '#F15A2A', borderColor: 'rgba(241, 90, 42, 0.2)', fontFamily: "'Inter', sans-serif" } : { fontFamily: "'Inter', sans-serif" }}
-                  >
-                    {/* Animated shimmer background */}
-                    {!isListening && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                        animate={{
-                          x: ['-200%', '200%'],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          repeatDelay: 1,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    )}
-
-                    {/* Animated pulsing background when listening */}
-                    {isListening && (
-                      <>
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-500 to-red-600"
-                          animate={{
-                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "linear"
-                          }}
-                          style={{
-                            backgroundSize: '200% 200%',
-                          }}
-                        />
-                        {/* Pulsing rings */}
-                        <motion.div
-                          className="absolute inset-0 rounded-2xl border-2 border-white/40"
-                          animate={{
-                            scale: [1, 1.1, 1],
-                            opacity: [0.6, 0.3, 0.6],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                      </>
-                    )}
-                    
-                    {/* Content with icon and text */}
-                    <div className="relative z-10 flex items-center gap-3">
-                      {isListening ? (
-                        <>
-                          {/* Animated pulsing microphone icon */}
-                          <motion.div
-                            className="relative"
-                            animate={{ 
-                              scale: [1, 1.15, 1],
-                            }}
-                            transition={{ 
-                              duration: 1, 
-                              repeat: Infinity,
-                              ease: "easeInOut"
-                            }}
-                          >
-                            {/* Multiple pulse rings */}
-                            {[0, 0.3, 0.6].map((delay, idx) => (
-                              <motion.div
-                                key={idx}
-                                className="absolute inset-0 rounded-full bg-white/50"
-                                animate={{
-                                  scale: [1, 2, 2],
-                                  opacity: [0.6, 0, 0],
-                                }}
-                                transition={{
-                                  duration: 1.5,
-                                  repeat: Infinity,
-                                  ease: "easeOut",
-                                  delay: delay
-                                }}
-                              />
-                            ))}
-                            <svg className="w-6 h-6 relative z-10" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                            </svg>
-                          </motion.div>
-                          <span className="font-bold tracking-wide">Stop</span>
-                        </>
-                      ) : (
-                        <>
-                          {/* Elegant microphone icon */}
-                          <motion.div
-                            whileHover={{ 
-                              rotate: [0, -15, 15, -15, 0],
-                              scale: [1, 1.1, 1]
-                            }}
-                            transition={{ duration: 0.6 }}
-                            className="relative"
-                          >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                            </svg>
-                            {/* Subtle glow effect */}
-                            <motion.div
-                              className="absolute inset-0 bg-white/20 rounded-full blur-md"
-                              animate={{
-                                opacity: [0.3, 0.6, 0.3],
-                              }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                ease: "easeInOut"
-                              }}
-                            />
-                          </motion.div>
-                          <span className="font-bold tracking-wide">Voice</span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Top shine effect */}
-                    <motion.div
-                      className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent"
-                      animate={isListening ? {
-                        opacity: [0.3, 0.6, 0.3],
-                      } : {}}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  </motion.button>
-                ) : (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-500 text-xs border border-gray-200">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Not supported</span>
-                  </div>
-                )}
-              </div>
 
               <div className="relative">
                 <textarea
@@ -425,96 +216,125 @@ const JournalNew = () => {
                   onChange={(e) => setText(e.target.value)}
                   rows={12}
                   required
-                  placeholder={isListening 
-                    ? "Speak now... Your words will appear here as you speak." 
-                    : "Write about your thoughts, feelings, or experiences... Or click 'Start Voice Input' to speak. This is your safe space."}
-                  className="input-modern resize-none font-serif"
-                  disabled={isListening && !text} // Allow editing while listening if text exists
+                  placeholder={isListening
+                    ? "Speak now... Your words will appear here as you speak."
+                    : "Write about your thoughts, feelings, or experiences... This is your safe space."}
+                  className="input-modern resize-none font-serif pr-24"
+                  disabled={isListening && !text}
                 />
-                {isListening && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute top-4 right-4 flex items-center gap-3 bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl shadow-red-500/50 backdrop-blur-md border-2 border-white/30 z-20"
-                  >
-                    {/* Multiple animated pulse rings */}
-                    <div className="absolute inset-0 rounded-full overflow-hidden">
-                      {[0, 0.2, 0.4].map((delay, idx) => (
-                        <motion.div
-                          key={idx}
-                          className="absolute inset-0 rounded-full bg-white/40"
-                          animate={{
-                            scale: [1, 1.6, 1.6],
-                            opacity: [0.6, 0, 0],
-                          }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            ease: "easeOut",
-                            delay: delay
-                          }}
-                        />
-                      ))}
-                    </div>
-                    
-                    {/* Pulsing dot */}
-                    <motion.span
-                      animate={{ 
-                        scale: [1, 1.4, 1],
-                        opacity: [1, 0.7, 1]
-                      }}
-                      transition={{ 
-                        duration: 1, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
-                      }}
-                      className="relative z-10 w-3 h-3 bg-white rounded-full shadow-lg"
-                    />
-                    
-                    {/* Text with glow */}
-                    <span className="relative z-10 tracking-wide drop-shadow-lg">
-                      Recording...
-                    </span>
-                    
-                    {/* Shimmer effect */}
+
+                {/* Voice Button - Bottom Right Corner */}
+                <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                  {/* Recording Indicator */}
+                  {isListening && (
                     <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full"
-                      animate={{
-                        x: ['-100%', '100%'],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
-                  </motion.div>
-                )}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="flex items-center gap-2 bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg shadow-red-500/50 border-2 border-white/30"
+                    >
+                      {/* Pulsing dot */}
+                      <motion.span
+                        animate={{
+                          scale: [1, 1.4, 1],
+                          opacity: [1, 0.7, 1]
+                        }}
+                        transition={{
+                          duration: 1,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="w-2 h-2 bg-white rounded-full shadow-lg"
+                      />
+                      <span className="tracking-wide">Recording</span>
+                    </motion.div>
+                  )}
+
+                  {/* Round Voice Button */}
+                  {voiceSupported ? (
+                    <motion.button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`relative overflow-hidden w-12 h-12 rounded-full font-bold transition-all duration-300 border-2 flex items-center justify-center ${
+                        isListening
+                          ? 'bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white shadow-xl shadow-red-500/60 border-red-300'
+                          : 'text-white shadow-lg hover:shadow-xl'
+                      }`}
+                      style={!isListening ? { background: '#F15A2A', borderColor: 'rgba(241, 90, 42, 0.3)' } : {}}
+                    >
+                      {/* Animated pulsing background when listening */}
+                      {isListening && (
+                        <>
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-500 to-red-600"
+                            animate={{
+                              backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "linear"
+                            }}
+                            style={{
+                              backgroundSize: '200% 200%',
+                            }}
+                          />
+                          {/* Pulsing rings */}
+                          <motion.div
+                            className="absolute inset-0 rounded-full border-2 border-white/40"
+                            animate={{
+                              scale: [1, 1.3, 1],
+                              opacity: [0.6, 0, 0.6],
+                            }}
+                            transition={{
+                              duration: 1.5,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          />
+                        </>
+                      )}
+
+                      {/* Microphone Icon */}
+                      <div className="relative z-10">
+                        {isListening ? (
+                          <motion.div
+                            animate={{ scale: [1, 1.15, 1] }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                          >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                            </svg>
+                          </motion.div>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* Shimmer effect when not listening */}
+                      {!isListening && (
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                          animate={{ x: ['-200%', '200%'] }}
+                          transition={{ duration: 2, repeat: Infinity, repeatDelay: 1, ease: "easeInOut" }}
+                        />
+                      )}
+                    </motion.button>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between items-center text-xs text-gray-500 mt-2">
                 <span>{text.length} characters</span>
-                {isListening && (
-                  <motion.span
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center gap-2 text-red-600 font-semibold"
-                  >
-                    <motion.span
-                      animate={{ 
-                        scale: [1, 1.3, 1],
-                        opacity: [1, 0.6, 1]
-                      }}
-                      transition={{ 
-                        duration: 1, 
-                        repeat: Infinity, 
-                        ease: "easeInOut" 
-                      }}
-                      className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-lg"
-                    />
-                    <span className="tracking-wide">Listening... Speak clearly</span>
-                  </motion.span>
-                )}
               </div>
             </div>
 
@@ -600,7 +420,9 @@ const JournalNew = () => {
               <div className="card-3d p-6 text-center">
                 <div className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Intensity Score</div>
                 <div className="text-4xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>
-                  {result.intensity_score.toFixed(2)}
+                  {result.sentiment_score < 0 && result.detected_emotions && result.detected_emotions.length > 0
+                    ? (result.detected_emotions.reduce((sum, e) => sum + e.confidence, 0) / result.detected_emotions.length).toFixed(2)
+                    : 'NA'}
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
                   Emotional intensity
@@ -608,25 +430,28 @@ const JournalNew = () => {
               </div>
             </div>
 
-            {/* Key Themes */}
-            {result.key_themes && result.key_themes.length > 0 && (
+            {/* Detected Emotions */}
+            {result.detected_emotions && result.detected_emotions.length > 0 && (
               <div className="card-3d p-6">
                 <h3 className="font-bold text-lg mb-3 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
-                  <span>Key Themes</span>
+                  <span>Detected Emotions</span>
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {result.key_themes.map((theme, idx) => (
+                  {result.detected_emotions.map((emotion, idx) => (
                     <motion.span
                       key={idx}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: idx * 0.1 }}
-                      className="badge badge-primary text-base px-4 py-2"
+                      className="badge badge-primary text-base px-4 py-2 flex items-center gap-2"
                     >
-                      {theme}
+                      <span className="capitalize">{emotion.emotion}</span>
+                      <span className="font-bold" style={{ color: '#F15A2A' }}>
+                        {Math.round(emotion.confidence * 100)}%
+                      </span>
                     </motion.span>
                   ))}
                 </div>
@@ -689,8 +514,6 @@ const JournalNew = () => {
                 onClick={() => {
                   setResult(null)
                   setText('')
-                  setCheckinMood('')
-                  setCheckinIntensity(0.5)
                 }}
                 className="flex-1 py-3 bg-white rounded-xl hover:bg-gray-50 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
                 style={{ border: '2px solid rgba(241, 90, 42, 0.2)', color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }}
