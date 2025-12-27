@@ -467,7 +467,7 @@ def train_model(config: Dict):
         save_steps=training_config["save_steps"],
         eval_steps=training_config["eval_steps"],
         save_total_limit=training_config["save_total_limit"],
-        evaluation_strategy=training_config["evaluation_strategy"],
+        eval_strategy=training_config["eval_strategy"],
         save_strategy=training_config["save_strategy"],
         load_best_model_at_end=training_config["load_best_model_at_end"],
         metric_for_best_model=training_config["metric_for_best_model"],
