@@ -57,14 +57,71 @@ def normalize_emotion_name(emotion):
 
 
 def load_json_file(file_path):
-    """Load JSON file (handles both single objects and arrays)"""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+    """
+    Load JSON file - handles both JSON array format and JSON Lines format
     
-    # If it's a single object, convert to list
-    if isinstance(data, dict):
-        return [data]
-    return data
+    JSON array format:
+        [{"id": "1", ...}, {"id": "2", ...}]
+    
+    JSON Lines format (one JSON object per line):
+        {"id": "1", ...}
+        {"id": "2", ...}
+    """
+    entries = []
+    
+    # First, try to read the file to detect format
+    with open(file_path, 'r', encoding='utf-8') as f:
+        first_line = f.readline().strip()
+        f.seek(0)  # Reset to beginning
+        
+        # Check if first line starts with '[' (JSON array) or '{' (JSON Lines or single object)
+        if first_line.startswith('['):
+            # Standard JSON array format
+            try:
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+                elif isinstance(data, dict):
+                    return [data]
+                return data
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Error parsing JSON array from {file_path.name}: {e}")
+        
+        elif first_line.startswith('{'):
+            # Could be JSON Lines format or single JSON object
+            # Try to parse as single object first
+            try:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return [data]
+                return data
+            except json.JSONDecodeError:
+                # If that fails, try JSON Lines format (one JSON per line)
+                f.seek(0)
+                for line_num, line in enumerate(f, 1):
+                    line = line.strip()
+                    if not line:  # Skip empty lines
+                        continue
+                    try:
+                        entry = json.loads(line)
+                        entries.append(entry)
+                    except json.JSONDecodeError as e:
+                        print(f"Warning: Could not parse line {line_num} in {file_path.name}: {e}")
+                        continue
+                
+                if entries:
+                    print(f"  Loaded {len(entries)} entries from JSON Lines format")
+                    return entries
+                else:
+                    raise ValueError(f"No valid JSON entries found in {file_path.name}")
+        else:
+            raise ValueError(
+                f"Unexpected file format in {file_path.name}. "
+                f"Expected JSON array starting with '[' or JSON Lines starting with '{{'"
+            )
+    
+    # Fallback: if we get here, something went wrong
+    raise ValueError(f"Could not parse {file_path.name} in any recognized format")
 
 
 def extract_emotions_from_entry(entry):

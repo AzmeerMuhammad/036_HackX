@@ -5,7 +5,8 @@
 The DepressionEmo dataset comes in JSON format with the following structure:
 - **Location**: `data/DepressionEmo/Dataset/`
 - **Files**: `train.json`, `val.json`, `test.json`
-- **Format**: Each entry contains:
+- **Format**: JSON Lines format (one JSON object per line) or JSON array format
+- **Each entry contains**:
   - `id`: Unique identifier
   - `title`: Post title
   - `post`: Original post text
@@ -117,6 +118,25 @@ After preparation, you'll see:
 - Sample entries for verification
 
 ## Troubleshooting
+
+### JSON Parsing Errors
+
+**Error: `json.decoder.JSONDecodeError: Extra data: line 2 column 1`**
+
+This means the file is in **JSON Lines format** (one JSON object per line), not a single JSON array. The `prepare_depression_emo.py` script now handles both formats automatically:
+
+- ✅ **JSON Lines format** (one object per line):
+  ```json
+  {"id": "1", "text": "...", "emotions": [...]}
+  {"id": "2", "text": "...", "emotions": [...]}
+  ```
+
+- ✅ **JSON Array format**:
+  ```json
+  [{"id": "1", ...}, {"id": "2", ...}]
+  ```
+
+The script automatically detects and handles both formats.
 
 ### "No emotion columns found"
 - Make sure you ran `prepare_depression_emo.py` first
