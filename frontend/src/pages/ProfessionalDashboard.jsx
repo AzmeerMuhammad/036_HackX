@@ -22,32 +22,12 @@ const ProfessionalDashboard = () => {
   const [submitting, setSubmitting] = useState(false)
 
   // Patients State
-  const [patients, setPatients] = useState([
-    // Mock data - replace with API call
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john@example.com',
-      sharedSince: '2024-01-15',
-      lastEntry: '2024-01-20',
-      entriesCount: 12,
-      riskLevel: 'low',
-      summaryAvailable: true
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane@example.com',
-      sharedSince: '2024-01-10',
-      lastEntry: '2024-01-19',
-      entriesCount: 8,
-      riskLevel: 'medium',
-      summaryAvailable: true
-    }
-  ])
+  const [patients, setPatients] = useState([])
+  const [loadingPatients, setLoadingPatients] = useState(true)
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [aiSummary, setAiSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
+  const [newPatientsCount, setNewPatientsCount] = useState(0)
 
   // Availability State
   const [availability, setAvailability] = useState({
@@ -85,6 +65,48 @@ const ProfessionalDashboard = () => {
   useEffect(() => {
     // Just set loading to false since we're not auto-loading escalations
     setLoading(false)
+  }, [])
+
+  const fetchPatients = async () => {
+    try {
+      setLoadingPatients(true)
+      const response = await professionalsAPI.getPatients()
+      const newPatients = response.data || []
+      
+      // Check for new patients (compare by ID)
+      if (patients.length > 0) {
+        const existingIds = new Set(patients.map(p => p.id))
+        const newOnes = newPatients.filter(p => !existingIds.has(p.id))
+        if (newOnes.length > 0) {
+          setNewPatientsCount(newOnes.length)
+          // Show subtle notification (non-blocking)
+          console.log(`✅ ${newOnes.length} new patient(s) have shared their history with you!`)
+        }
+      } else if (newPatients.length > 0 && patients.length === 0) {
+        // First time loading with patients
+        console.log(`✅ ${newPatients.length} patient(s) have shared their history with you!`)
+      }
+      
+      setPatients(newPatients)
+    } catch (error) {
+      console.error('Error fetching patients:', error)
+      setPatients([]) // Set empty array on error
+    } finally {
+      setLoadingPatients(false)
+    }
+  }
+
+  useEffect(() => {
+    // Initial fetch
+    fetchPatients()
+    
+    // Auto-refresh every 30 seconds to show new consents
+    const interval = setInterval(() => {
+      fetchPatients()
+    }, 30000) // 30 seconds
+    
+    // Cleanup interval on unmount
+    return () => clearInterval(interval)
   }, [])
 
   const loadEscalations = async () => {
@@ -134,28 +156,11 @@ const ProfessionalDashboard = () => {
   const handleLoadAISummary = async (patientId) => {
     setLoadingSummary(true)
     try {
-      // Mock AI summary - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setAiSummary({
-        patientId,
-        overview: 'Patient shows consistent patterns of anxiety related to work stress and social situations. Recent entries indicate improvement in coping mechanisms.',
-        keyThemes: ['Work Stress', 'Anxiety', 'Social Anxiety', 'Sleep Issues', 'Self-improvement'],
-        sentimentTrend: 'improving',
-        averageSentiment: 0.45,
-        riskIndicators: ['Moderate stress levels', 'Occasional sleep disruption'],
-        recommendations: [
-          'Continue current treatment approach',
-          'Consider stress management techniques',
-          'Monitor sleep patterns closely'
-        ],
-        recentEntries: [
-          { date: '2024-01-20', sentiment: 0.6, summary: 'Feeling more confident about work presentations' },
-          { date: '2024-01-19', sentiment: 0.3, summary: 'Struggled with team meeting anxiety' },
-          { date: '2024-01-18', sentiment: 0.5, summary: 'Practiced breathing exercises, felt calmer' }
-        ]
-      })
+      const response = await professionalsAPI.getPatientSummary(patientId)
+      setAiSummary(response.data)
     } catch (err) {
-      alert('Failed to load AI summary')
+      console.error('Error loading AI summary:', err)
+      alert(err.response?.data?.error || 'Failed to load AI summary')
     } finally {
       setLoadingSummary(false)
     }
@@ -174,66 +179,16 @@ const ProfessionalDashboard = () => {
   const handleModalLoadAISummary = async (patient) => {
     setModalLoadingSummary(true)
     try {
-      // Mock AI summary - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const response = await professionalsAPI.getPatientSummary(patient.id)
+      // Map recentEntries to historyEntries for backward compatibility
+      const summary = response.data
       setModalAiSummary({
-        patientId: patient.id,
-        overview: `Comprehensive analysis of ${patient.name}'s journal entries. Patient demonstrates ${patient.riskLevel === 'low' ? 'healthy coping mechanisms and positive mental health patterns' : patient.riskLevel === 'medium' ? 'moderate emotional challenges with improvement potential' : 'significant concerns requiring immediate professional attention'}.`,
-        keyThemes: patient.riskLevel === 'low'
-          ? ['Gratitude', 'Personal Growth', 'Mindfulness', 'Positive Relationships', 'Self-Care']
-          : patient.riskLevel === 'medium'
-          ? ['Work Stress', 'Anxiety', 'Social Anxiety', 'Sleep Issues', 'Self-improvement']
-          : ['Severe Depression', 'Suicidal Ideation', 'Isolation', 'Hopelessness', 'Crisis Indicators'],
-        sentimentTrend: patient.riskLevel === 'low' ? 'positive' : patient.riskLevel === 'medium' ? 'improving' : 'declining',
-        averageSentiment: patient.riskLevel === 'low' ? 0.72 : patient.riskLevel === 'medium' ? 0.45 : 0.12,
-        riskIndicators: patient.riskLevel === 'low'
-          ? ['No significant risks detected', 'Strong support system evident']
-          : patient.riskLevel === 'medium'
-          ? ['Moderate stress levels', 'Occasional sleep disruption', 'Work-related anxiety']
-          : ['HIGH RISK: Mentions of self-harm', 'Severe isolation', 'Loss of interest in activities', 'Expressions of hopelessness'],
-        recommendations: patient.riskLevel === 'low'
-          ? ['Continue current positive practices', 'Maintain regular journaling', 'Encourage continued self-care', 'Monitor for any changes']
-          : patient.riskLevel === 'medium'
-          ? ['Continue current treatment approach', 'Consider stress management techniques', 'Monitor sleep patterns closely', 'Weekly check-ins recommended']
-          : ['URGENT: Immediate consultation required', 'Consider crisis intervention', 'Daily monitoring essential', 'Inform emergency contacts', 'Safety plan assessment needed'],
-        historyEntries: [
-          {
-            date: patient.lastEntry,
-            sentiment: patient.riskLevel === 'low' ? 0.8 : patient.riskLevel === 'medium' ? 0.6 : 0.1,
-            mood: patient.riskLevel === 'low' ? 'grateful, optimistic' : patient.riskLevel === 'medium' ? 'anxious, hopeful' : 'hopeless, overwhelmed',
-            summary: patient.riskLevel === 'low'
-              ? 'Expressed gratitude for family support and professional growth. Mentioned starting new meditation practice.'
-              : patient.riskLevel === 'medium'
-              ? 'Discussed work presentation anxiety. Mentioned trying breathing exercises with some success.'
-              : 'Expressed feelings of emptiness and lack of purpose. Mentioned difficulty getting out of bed.',
-            riskFlags: patient.riskLevel === 'high' ? ['mentions of self-harm', 'isolation'] : []
-          },
-          {
-            date: '2024-01-19',
-            sentiment: patient.riskLevel === 'low' ? 0.75 : patient.riskLevel === 'medium' ? 0.3 : 0.05,
-            mood: patient.riskLevel === 'low' ? 'content, peaceful' : patient.riskLevel === 'medium' ? 'stressed, determined' : 'depressed, isolated',
-            summary: patient.riskLevel === 'low'
-              ? 'Wrote about meaningful conversation with friend. Feeling more connected to community.'
-              : patient.riskLevel === 'medium'
-              ? 'Struggled during team meeting. Felt judged and anxious. Planning to discuss with therapist.'
-              : 'Another difficult day. Cannot see way forward. Everyone would be better off without me.',
-            riskFlags: patient.riskLevel === 'high' ? ['suicidal ideation'] : []
-          },
-          {
-            date: '2024-01-18',
-            sentiment: patient.riskLevel === 'low' ? 0.65 : patient.riskLevel === 'medium' ? 0.5 : 0.15,
-            mood: patient.riskLevel === 'low' ? 'reflective, calm' : patient.riskLevel === 'medium' ? 'neutral, tired' : 'numb, detached',
-            summary: patient.riskLevel === 'low'
-              ? 'Reflected on weekly progress. Noticed improved sleep quality and energy levels.'
-              : patient.riskLevel === 'medium'
-              ? 'Practiced breathing exercises before presentation. Felt calmer than usual.'
-              : 'Nothing feels real anymore. Just going through motions. No point to any of it.',
-            riskFlags: patient.riskLevel === 'high' ? ['emotional numbness', 'loss of meaning'] : []
-          }
-        ]
+        ...summary,
+        historyEntries: summary.recentEntries || []
       })
     } catch (err) {
-      alert('Failed to load AI summary')
+      console.error('Error loading AI summary:', err)
+      alert(err.response?.data?.error || 'Failed to load AI summary')
     } finally {
       setModalLoadingSummary(false)
     }
@@ -358,13 +313,41 @@ const ProfessionalDashboard = () => {
             >
               {/* Patients List */}
               <div>
-                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <span>Patients Sharing History</span>
-                </h2>
-                {patients.length === 0 ? (
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                    <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Patients Sharing History</span>
+                    {newPatientsCount > 0 && (
+                      <span className="ml-2 px-2 py-1 text-xs font-bold rounded-full text-white animate-pulse" style={{ background: '#10B981' }}>
+                        {newPatientsCount} New
+                      </span>
+                    )}
+                  </h2>
+                  <button
+                    onClick={fetchPatients}
+                    disabled={loadingPatients}
+                    className="px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                    style={{ 
+                      background: loadingPatients ? '#ccc' : '#F15A2A', 
+                      color: 'white', 
+                      fontFamily: "'Inter', sans-serif",
+                      cursor: loadingPatients ? 'not-allowed' : 'pointer'
+                    }}
+                    title="Refresh patient list"
+                  >
+                    <svg className={`w-4 h-4 ${loadingPatients ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>{loadingPatients ? 'Refreshing...' : 'Refresh'}</span>
+                  </button>
+                </div>
+                {loadingPatients ? (
+                  <div className="card-3d p-8 text-center">
+                    <p className="text-gray-600">Loading patients...</p>
+                  </div>
+                ) : patients.length === 0 ? (
                   <div className="card-3d p-8 text-center">
                     <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -993,8 +976,31 @@ const ProfessionalDashboard = () => {
                 <div className="grid lg:grid-cols-2 gap-6 p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
                   {/* Patient List */}
                   <div>
-                    <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Patients Sharing History</h3>
-                    {patients.length === 0 ? (
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Patients Sharing History</h3>
+                      <button
+                        onClick={fetchPatients}
+                        disabled={loadingPatients}
+                        className="px-3 py-1 text-sm rounded-lg transition-colors flex items-center gap-2"
+                        style={{ 
+                          background: loadingPatients ? '#ccc' : '#F15A2A', 
+                          color: 'white', 
+                          fontFamily: "'Inter', sans-serif",
+                          cursor: loadingPatients ? 'not-allowed' : 'pointer'
+                        }}
+                        title="Refresh patient list"
+                      >
+                        <svg className={`w-4 h-4 ${loadingPatients ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>{loadingPatients ? 'Refreshing...' : 'Refresh'}</span>
+                      </button>
+                    </div>
+                    {loadingPatients ? (
+                      <div className="card-3d p-8 text-center">
+                        <p className="text-gray-600">Loading patients...</p>
+                      </div>
+                    ) : patients.length === 0 ? (
                       <div className="card-3d p-8 text-center">
                         <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -1036,7 +1042,7 @@ const ProfessionalDashboard = () => {
                             </div>
                             <div className="flex gap-4 text-xs text-gray-600">
                               <span>{patient.entriesCount} entries</span>
-                              <span>Last: {new Date(patient.lastEntry).toLocaleDateString()}</span>
+                              <span>Last: {patient.lastEntry ? new Date(patient.lastEntry).toLocaleDateString() : 'N/A'}</span>
                             </div>
                           </motion.div>
                         ))}

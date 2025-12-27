@@ -15,17 +15,55 @@ class RegisterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        if not serializer.is_valid():
+            # Log validation errors for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Registration validation errors: {serializer.errors}')
+            # Return detailed validation errors
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'user': UserSerializer(user).data,
-            'tokens': {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }
-        }, status=status.HTTP_201_CREATED)
+        try:
+            user = serializer.save()
+            
+            # Create Professional record if user is a professional
+            # (Backup in case signal doesn't fire)
+            if user.is_professional:
+                try:
+                    from apps.professionals.models import Professional
+                    Professional.objects.get_or_create(
+                        user=user,
+                        defaults={
+                            'specialization': user.professional_type or 'General Practice',
+                            'availability': '',
+                            'city': '',
+                            'verified': False
+                        }
+                    )
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f'Could not create Professional record: {str(e)}')
+            
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'user': UserSerializer(user).data,
+                'tokens': {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                }
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f'Registration error: {str(e)}', exc_info=True)
+            return Response(
+                {'error': f'Registration failed: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 @api_view(['POST'])
