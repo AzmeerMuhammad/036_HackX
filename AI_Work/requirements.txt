@@ -23,3 +23,6 @@ requests>=2.31.0
 # Utilities
 tqdm>=4.65.0
 
+# Stratified splitting for multi-label data (optional but recommended)
+# iterative-stratification>=0.1.7
+

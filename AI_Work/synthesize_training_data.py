@@ -34,6 +34,36 @@ DEPRESSION_EMOTIONS = [
 ]
 
 
+def preprocess_text(text):
+    """
+    Clean and preprocess Reddit text for better model performance.
+    Handles Reddit-specific formatting, URLs, emojis, etc.
+    """
+    import re
+    if not isinstance(text, str):
+        text = str(text)
+    
+    # Remove URLs
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    
+    # Remove Reddit-specific patterns
+    text = re.sub(r'/r/\w+|/u/\w+', '', text)  # Subreddit/user mentions
+    text = re.sub(r'\[deleted\]|\[removed\]', '', text, flags=re.IGNORECASE)
+    
+    # Remove excessive whitespace
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Remove leading/trailing whitespace
+    text = text.strip()
+    
+    # Handle common contractions (optional - can expand if needed)
+    # For now, just ensure text is not empty
+    if len(text) < 3:
+        return "[empty]"
+    
+    return text
+
+
 class EmotionClassifier:
     """Wrapper for emotion classifier inference"""
     def __init__(self, model_path=None):
@@ -53,33 +83,47 @@ class EmotionClassifier:
         self.model.to(self.device)
         self.model.eval()
         
-        # Load emotion names
+        # Load emotion names and thresholds
         emotion_info_path = model_path / "emotion_info.json"
         if emotion_info_path.exists():
             with open(emotion_info_path, 'r') as f:
                 emotion_info = json.load(f)
                 self.emotion_names = emotion_info['emotion_names']
+                self.optimal_thresholds = emotion_info.get('optimal_thresholds', [0.5] * len(self.emotion_names))
         else:
             self.emotion_names = DEPRESSION_EMOTIONS
+            self.optimal_thresholds = [0.5] * len(self.emotion_names)
         
         print(f"Loaded classifier with {len(self.emotion_names)} emotions")
     
-    def predict_emotions(self, texts, batch_size=16):
-        """Predict emotion scores for texts"""
+    def predict_emotions(self, texts, batch_size=16, use_thresholds=True, preprocess=True):
+        """
+        Predict emotion scores for texts.
+        
+        Args:
+            texts: Input text(s) - string or list of strings
+            batch_size: Batch size for inference
+            use_thresholds: Whether to use optimal thresholds for binary predictions
+            preprocess: Whether to preprocess text (default: True)
+        """
         if isinstance(texts, str):
             texts = [texts]
+        
+        # Preprocess texts if enabled
+        if preprocess:
+            texts = [preprocess_text(text) for text in texts]
         
         all_probs = []
         
         for i in range(0, len(texts), batch_size):
             batch_texts = texts[i:i+batch_size]
             
-            # Tokenize
+            # Tokenize (using max_length=512 to match training)
             encodings = self.tokenizer(
                 batch_texts,
                 truncation=True,
                 padding='max_length',
-                max_length=256,
+                max_length=512,  # Updated to match training
                 return_tensors='pt'
             )
             
@@ -98,7 +142,12 @@ class EmotionClassifier:
         # Create emotion score dictionary for each text
         results = []
         for probs_row in all_probs:
-            emotion_scores = {emotion: float(score) for emotion, score in zip(self.emotion_names, probs_row)}
+            if use_thresholds and len(self.optimal_thresholds) == len(probs_row):
+                # Use probabilities (continuous scores)
+                emotion_scores = {emotion: float(score) for emotion, score in zip(self.emotion_names, probs_row)}
+            else:
+                # Use probabilities (continuous scores)
+                emotion_scores = {emotion: float(score) for emotion, score in zip(self.emotion_names, probs_row)}
             results.append(emotion_scores)
         
         return results

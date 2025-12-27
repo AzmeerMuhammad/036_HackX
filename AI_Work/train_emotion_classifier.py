@@ -1,6 +1,6 @@
 """
 Train Emotion Classifier on DepressionEmo Dataset
-Trains DistilBERT/mobileBERT to predict depression-relevant emotions
+Trains RoBERTa/BERT to predict depression-relevant emotions with improved accuracy
 """
 import os
 import pandas as pd
@@ -9,12 +9,18 @@ from pathlib import Path
 import json
 from datetime import datetime
 import warnings
+import re
 warnings.filterwarnings('ignore')
 
 # ML Libraries
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, f1_score
+from sklearn.metrics import (
+    classification_report, confusion_matrix, accuracy_score, 
+    f1_score, precision_score, recall_score, hamming_loss
+)
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from transformers import (
     AutoTokenizer, 
@@ -58,19 +64,165 @@ ADDITIONAL_EMOTIONS = [
 ]
 
 
+def preprocess_text(text):
+    """
+    Clean and preprocess Reddit text for better model performance.
+    Handles Reddit-specific formatting, URLs, emojis, etc.
+    """
+    if not isinstance(text, str):
+        text = str(text)
+    
+    # Remove URLs
+    text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE)
+    
+    # Remove Reddit-specific patterns
+    text = re.sub(r'/r/\w+|/u/\w+', '', text)  # Subreddit/user mentions
+    text = re.sub(r'\[deleted\]|\[removed\]', '', text, flags=re.IGNORECASE)
+    
+    # Remove excessive whitespace
+    text = re.sub(r'\s+', ' ', text)
+    
+    # Remove leading/trailing whitespace
+    text = text.strip()
+    
+    # Handle common contractions (optional - can expand if needed)
+    # For now, just ensure text is not empty
+    if len(text) < 3:
+        return "[empty]"
+    
+    return text
+
+
+class FocalLoss(nn.Module):
+    """
+    Focal Loss for addressing class imbalance in multi-label classification.
+    FL(p_t) = -α_t(1-p_t)^γ log(p_t)
+    """
+    def __init__(self, alpha=1.0, gamma=2.0, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+    
+    def forward(self, inputs, targets):
+        # Apply sigmoid to get probabilities
+        probs = torch.sigmoid(inputs)
+        
+        # Calculate p_t
+        p_t = probs * targets + (1 - probs) * (1 - targets)
+        
+        # Calculate focal weight
+        focal_weight = (1 - p_t) ** self.gamma
+        
+        # Calculate BCE loss
+        bce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
+        
+        # Apply focal weight
+        focal_loss = self.alpha * focal_weight * bce_loss
+        
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+
+
+class WeightedBCELoss(nn.Module):
+    """
+    Weighted Binary Cross Entropy Loss for handling class imbalance.
+    """
+    def __init__(self, pos_weight=None, reduction='mean'):
+        super(WeightedBCELoss, self).__init__()
+        self.pos_weight = pos_weight
+        self.reduction = reduction
+    
+    def forward(self, inputs, targets):
+        if self.pos_weight is not None:
+            # Ensure pos_weight is on the same device
+            if isinstance(self.pos_weight, torch.Tensor):
+                pos_weight = self.pos_weight.to(inputs.device)
+            else:
+                pos_weight = torch.tensor(self.pos_weight, device=inputs.device)
+            
+            return F.binary_cross_entropy_with_logits(
+                inputs, targets, pos_weight=pos_weight, reduction=self.reduction
+            )
+        else:
+            return F.binary_cross_entropy_with_logits(
+                inputs, targets, reduction=self.reduction
+            )
+
+
+def calculate_class_weights(labels):
+    """
+    Calculate class weights for imbalanced multi-label classification.
+    Returns weights for positive class (1) for each emotion.
+    """
+    n_samples, n_classes = labels.shape
+    pos_weights = []
+    
+    for i in range(n_classes):
+        pos_count = labels[:, i].sum()
+        neg_count = n_samples - pos_count
+        
+        if pos_count > 0 and neg_count > 0:
+            # Inverse frequency weighting
+            weight = neg_count / pos_count
+            # Cap weights to prevent extreme values
+            weight = min(weight, 10.0)
+            pos_weights.append(weight)
+        else:
+            pos_weights.append(1.0)
+    
+    return np.array(pos_weights)
+
+
+def stratified_split_multi_label(texts, labels, test_size=0.3, random_state=42):
+    """
+    Stratified split for multi-label data.
+    Uses iterative stratification to preserve label distribution.
+    Falls back to regular split if stratification fails.
+    """
+    try:
+        from iterstrat.ml_stratifiers import MultilabelStratifiedShuffleSplit
+        
+        msss = MultilabelStratifiedShuffleSplit(
+            n_splits=1, test_size=test_size, random_state=random_state
+        )
+        train_idx, temp_idx = next(msss.split(texts, labels))
+        
+        X_train = texts[train_idx]
+        y_train = labels[train_idx]
+        X_temp = texts[temp_idx]
+        y_temp = labels[temp_idx]
+        
+        return X_train, X_temp, y_train, y_temp
+    except ImportError:
+        print("Warning: iterstrat not available. Using regular split.")
+        print("Install with: pip install iterative-stratification")
+        return train_test_split(texts, labels, test_size=test_size, random_state=random_state)
+
+
 class MultiLabelEmotionDataset(Dataset):
-    """Custom dataset for multi-label emotion classification"""
-    def __init__(self, texts, labels, tokenizer, max_length=256):
+    """Custom dataset for multi-label emotion classification with text preprocessing"""
+    def __init__(self, texts, labels, tokenizer, max_length=512, preprocess=True):
         self.texts = texts
         self.labels = labels
         self.tokenizer = tokenizer
         self.max_length = max_length
+        self.preprocess = preprocess
     
     def __len__(self):
         return len(self.texts)
     
     def __getitem__(self, idx):
         text = str(self.texts[idx])
+        
+        # Apply preprocessing if enabled
+        if self.preprocess:
+            text = preprocess_text(text)
+        
         label = self.labels[idx]
         
         encoding = self.tokenizer(
@@ -206,17 +358,37 @@ def prepare_emotion_labels(df):
     return texts, labels_matrix, available_emotions
 
 
-def train_emotion_classifier(texts, labels, emotion_names, model_name='distilbert-base-uncased'):
-    """Train multi-label emotion classifier"""
+def train_emotion_classifier(
+    texts, labels, emotion_names, 
+    model_name='roberta-base',
+    use_focal_loss=False,
+    use_class_weights=True,
+    max_length=512,
+    early_stopping_patience=4
+):
+    """
+    Train multi-label emotion classifier with improved accuracy techniques.
+    
+    Args:
+        texts: Input texts
+        labels: Multi-label emotion labels
+        emotion_names: List of emotion names
+        model_name: Base model name (default: roberta-base)
+        use_focal_loss: Whether to use focal loss (default: False, uses weighted BCE)
+        use_class_weights: Whether to use class weights (default: True)
+        max_length: Maximum sequence length (default: 512)
+        early_stopping_patience: Early stopping patience (default: 4)
+    """
     print("\n" + "="*60)
     print(f"Training Emotion Classifier: {model_name}")
     print("="*60)
     
-    # Split data
-    X_train, X_temp, y_train, y_temp = train_test_split(
+    # Stratified split for better label distribution
+    print("\nSplitting data with stratification...")
+    X_train, X_temp, y_train, y_temp = stratified_split_multi_label(
         texts, labels, test_size=0.3, random_state=42
     )
-    X_val, X_test, y_val, y_test = train_test_split(
+    X_val, X_test, y_val, y_test = stratified_split_multi_label(
         X_temp, y_temp, test_size=0.5, random_state=42
     )
     
@@ -225,9 +397,23 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
     print(f"  Validation: {len(X_val)} samples")
     print(f"  Test: {len(X_test)} samples")
     
+    # Calculate class weights
+    class_weights = None
+    if use_class_weights:
+        print("\nCalculating class weights for imbalanced data...")
+        class_weights = calculate_class_weights(y_train)
+        print("Class weights (positive class):")
+        for emotion, weight in zip(emotion_names, class_weights):
+            print(f"  {emotion}: {weight:.3f}")
+        class_weights = torch.tensor(class_weights, dtype=torch.float32)
+    
     # Load tokenizer and model
-    print(f"\nLoading tokenizer and model...")
+    print(f"\nLoading tokenizer and model: {model_name}...")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    
+    # Add pad token if it doesn't exist (for RoBERTa)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
     
     num_labels = len(emotion_names)
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -237,30 +423,43 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
     )
     model.to(device)
     
-    # Create datasets
-    train_dataset = MultiLabelEmotionDataset(X_train, y_train, tokenizer)
-    val_dataset = MultiLabelEmotionDataset(X_val, y_val, tokenizer)
-    test_dataset = MultiLabelEmotionDataset(X_test, y_test, tokenizer)
+    # Create datasets with preprocessing
+    print(f"\nCreating datasets with max_length={max_length}...")
+    train_dataset = MultiLabelEmotionDataset(X_train, y_train, tokenizer, max_length=max_length, preprocess=True)
+    val_dataset = MultiLabelEmotionDataset(X_val, y_val, tokenizer, max_length=max_length, preprocess=True)
+    test_dataset = MultiLabelEmotionDataset(X_test, y_test, tokenizer, max_length=max_length, preprocess=True)
     
-    # Training arguments
+    # Setup loss function
+    if use_focal_loss:
+        print("\nUsing Focal Loss (alpha=1.0, gamma=2.0)")
+        loss_fn = FocalLoss(alpha=1.0, gamma=2.0)
+    elif use_class_weights and class_weights is not None:
+        print("\nUsing Weighted BCE Loss with class weights")
+        loss_fn = WeightedBCELoss(pos_weight=class_weights)
+    else:
+        print("\nUsing standard BCE Loss")
+        loss_fn = None  # Use default from model
+    
+    # Training arguments with improved settings
     training_args = TrainingArguments(
         output_dir=str(MODELS_DIR / "emotion_classifier_checkpoints"),
         
         # 1. Increase Epochs (we have EarlyStopping, so let it run longer)
-        num_train_epochs=15, 
+        num_train_epochs=20,  # Increased from 15
         
         # 2. Learning Rate & Schedule
-        learning_rate=5e-5,            # Slightly higher to escape local minima
+        learning_rate=3e-5,            # Slightly lower for RoBERTa
         lr_scheduler_type="cosine",    # Smoother decay than linear
-        warmup_ratio=0.15,              # Better than fixed steps for variable data sizes
+        warmup_ratio=0.1,              # Reduced warmup for RoBERTa
         
-        # 3. Regularization (to help with the exact-match/accuracy)
-        weight_decay=0.1,             # Increased to prevent overfitting to single labels
+        # 3. Regularization
+        weight_decay=0.01,             # Reduced for better learning
         
         # 4. Batch Size & Hardware
-        per_device_train_batch_size=32,
+        per_device_train_batch_size=16,  # Reduced for longer sequences
         per_device_eval_batch_size=16,
         fp16=torch.cuda.is_available(),
+        gradient_accumulation_steps=2,   # Effective batch size = 32
         
         # 5. Evaluation & Strategy
         eval_strategy="epoch",
@@ -268,7 +467,7 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
         load_best_model_at_end=True,
         metric_for_best_model="f1_macro", # Focus on balanced performance
         greater_is_better=True,
-        save_total_limit=1,               # Keep only the absolute best to save space
+        save_total_limit=2,               # Keep best 2 models
         
         # 6. Logging
         logging_dir=str(RESULTS_DIR / "emotion_classifier_logs"),
@@ -276,7 +475,7 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
         report_to="none",                 # Prevents extra clutter
     )
     
-    # Compute metrics function for multi-label
+    # Compute metrics function for multi-label with per-emotion metrics
     def compute_metrics(eval_pred):
         predictions, labels = eval_pred
         # Apply sigmoid to get probabilities
@@ -285,16 +484,47 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
         # Threshold at 0.5
         predictions_binary = (probs > 0.5).float().numpy()
         
-        # Calculate metrics
+        # Overall metrics
         accuracy = accuracy_score(labels, predictions_binary)
         f1_micro = f1_score(labels, predictions_binary, average='micro')
         f1_macro = f1_score(labels, predictions_binary, average='macro')
+        hamming = hamming_loss(labels, predictions_binary)
         
-        return {
+        # Per-emotion metrics
+        per_emotion_metrics = {}
+        for i, emotion in enumerate(emotion_names):
+            if labels[:, i].sum() > 0:  # Only if emotion exists in labels
+                precision = precision_score(labels[:, i], predictions_binary[:, i], zero_division=0)
+                recall = recall_score(labels[:, i], predictions_binary[:, i], zero_division=0)
+                f1 = f1_score(labels[:, i], predictions_binary[:, i], zero_division=0)
+                per_emotion_metrics[f'{emotion}_precision'] = precision
+                per_emotion_metrics[f'{emotion}_recall'] = recall
+                per_emotion_metrics[f'{emotion}_f1'] = f1
+        
+        metrics = {
             'accuracy': accuracy,
             'f1_micro': f1_micro,
-            'f1_macro': f1_macro
+            'f1_macro': f1_macro,
+            'hamming_loss': hamming,
+            **per_emotion_metrics
         }
+        
+        return metrics
+    
+    # Custom compute_loss if using focal loss or weighted BCE
+    def compute_loss(model, inputs, return_outputs=False):
+        labels = inputs.get("labels")
+        # Create a copy of inputs without labels for model forward pass
+        model_inputs = {k: v for k, v in inputs.items() if k != "labels"}
+        outputs = model(**model_inputs)
+        logits = outputs.get("logits")
+        
+        if loss_fn is not None:
+            loss = loss_fn(logits, labels)
+        else:
+            loss = outputs.loss
+        
+        return (loss, outputs) if return_outputs else loss
     
     # Trainer
     trainer = Trainer(
@@ -303,7 +533,8 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         compute_metrics=compute_metrics,
-        callbacks=[EarlyStoppingCallback(early_stopping_patience=2)]
+        compute_loss=compute_loss if (use_focal_loss or (use_class_weights and class_weights is not None)) else None,
+        callbacks=[EarlyStoppingCallback(early_stopping_patience=early_stopping_patience)]
     )
     
    # Train
@@ -338,6 +569,22 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
     print(f"\nOverall Accuracy (Subset): {opt_accuracy:.4f}")
     print(f"F1 Score (Micro): {opt_f1_micro:.4f}")
     print(f"F1 Score (Macro): {opt_f1_macro:.4f}")
+    
+    # Detailed per-emotion metrics
+    print("\n" + "="*60)
+    print("Per-Emotion Metrics (with optimized thresholds):")
+    print("="*60)
+    for i, emotion in enumerate(emotion_names):
+        if y_test[:, i].sum() > 0:
+            precision = precision_score(y_test[:, i], y_pred_optimized[:, i], zero_division=0)
+            recall = recall_score(y_test[:, i], y_pred_optimized[:, i], zero_division=0)
+            f1 = f1_score(y_test[:, i], y_pred_optimized[:, i], zero_division=0)
+            print(f"\n{emotion}:")
+            print(f"  Precision: {precision:.4f}")
+            print(f"  Recall: {recall:.4f}")
+            print(f"  F1-Score: {f1:.4f}")
+            print(f"  Threshold: {optimal_thresholds[i]:.3f}")
+            print(f"  Support: {int(y_test[:, i].sum())} positive samples")
     
     # Save model and thresholds
     model_save_path = MODELS_DIR / "emotion_classifier"
@@ -401,12 +648,16 @@ def main():
         # Prepare labels
         texts, labels, emotion_names = prepare_emotion_labels(df)
         
-        # Train model
+        # Train model with improved settings
         model, tokenizer, emotion_names, results = train_emotion_classifier(
             texts, 
             labels, 
             emotion_names,
-            model_name='distilbert-base-uncased'  # Can use 'google/mobilebert-uncased' for smaller model
+            model_name='roberta-base',  # Upgraded from DistilBERT to RoBERTa
+            use_focal_loss=False,  # Set to True to use focal loss instead of weighted BCE
+            use_class_weights=True,  # Use class weights to handle imbalance
+            max_length=512,  # Increased from 256 for better context
+            early_stopping_patience=4  # Increased from 2
         )
         
         print("\n" + "="*60)

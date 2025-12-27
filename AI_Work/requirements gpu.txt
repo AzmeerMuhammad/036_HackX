@@ -31,6 +31,9 @@ requests>=2.31.0
 # Utilities
 tqdm>=4.65.0
 
+# Stratified splitting for multi-label data (optional but recommended)
+# iterative-stratification>=0.1.7
+
 # Evaluation Metrics (optional but recommended)
 # rouge-score>=0.1.2
 # bert-score>=0.3.13
