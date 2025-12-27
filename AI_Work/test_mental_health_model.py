@@ -23,7 +23,7 @@ MODELS_DIR = BASE_DIR / "models"
 RESULTS_DIR = BASE_DIR / "results"
 DATA_DIR = BASE_DIR / "data"
 
-def load_model_and_tokenizer(model_path: str, base_model: str = "mistralai/Mistral-7B-Instruct-v0.2"):
+def load_model_and_tokenizer(model_path: str, base_model: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"):
     """Load fine-tuned model and tokenizer"""
     model_path = Path(model_path)
     
@@ -64,20 +64,19 @@ def load_model_and_tokenizer(model_path: str, base_model: str = "mistralai/Mistr
     return model, tokenizer
 
 def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
-    """Format prompt for inference (Mistral format)"""
+    """Format prompt for inference (TinyLlama-Chat format)"""
     emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
                              for e in emotions])
     
-    # Mistral-Instruct format: <s>[INST] {instruction} [/INST]
-    instruction = f"""You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
-
-Journal Entry: {journal_entry}
+    # TinyLlama-Chat format uses <|system|>, <|user|>, <|assistant|> tokens
+    system_msg = "You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities."
+    user_msg = f"""Journal Entry: {journal_entry}
 
 Identified Emotions: {emotions_str}
 
 Empathetic Response:"""
     
-    return f"<s>[INST] {instruction} [/INST]"
+    return f"<|system|>\n{system_msg}<|user|>\n{user_msg}<|assistant|>\n"
 
 def generate_response(
     model,
@@ -118,16 +117,16 @@ def generate_response(
     # Decode
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
-    # Extract only the response part (after [/INST])
-    if "[/INST]" in generated_text:
-        response = generated_text.split("[/INST]")[-1].strip()
-        # Remove any trailing </s> tokens
-        response = response.replace("</s>", "").strip()
+    # Extract only the response part (after <|assistant|>)
+    if "<|assistant|>" in generated_text:
+        response = generated_text.split("<|assistant|>")[-1].strip()
+        # Remove any trailing special tokens
+        response = response.replace("</s>", "").replace("<|endoftext|>", "").strip()
     elif "Empathetic Response:" in generated_text:
         response = generated_text.split("Empathetic Response:")[-1].strip()
     else:
         response = generated_text.replace(prompt, "").strip()
-        response = response.replace("</s>", "").strip()
+        response = response.replace("</s>", "").replace("<|endoftext|>", "").strip()
     
     return response
 
@@ -236,7 +235,7 @@ def load_test_data(data_dir: Path, max_samples: int = 100) -> List[Dict]:
 
 def evaluate_model(
     model_path: str,
-    base_model: str = "mistralai/Mistral-7B-Instruct-v0.2",
+    base_model: str = "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
     test_data: List[Dict] = None,
     generation_config: Dict = None
 ):

@@ -254,21 +254,20 @@ def load_empathetic_dialogues(data_dir: Path, use_processed: bool = True) -> Lis
     return dialogues
 
 def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
-    """Format the prompt for the model with journal entry and emotions (Mistral format)"""
+    """Format the prompt for the model with journal entry and emotions (TinyLlama-Chat format)"""
     # Format emotions list
     emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
                              for e in emotions])
     
-    # Mistral-Instruct format: <s>[INST] {instruction} [/INST]
-    instruction = f"""You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
-
-Journal Entry: {journal_entry}
+    # TinyLlama-Chat format uses <|system|>, <|user|>, <|assistant|> tokens
+    system_msg = "You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities."
+    user_msg = f"""Journal Entry: {journal_entry}
 
 Identified Emotions: {emotions_str}
 
 Empathetic Response:"""
     
-    return f"<s>[INST] {instruction} [/INST]"
+    return f"<|system|>\n{system_msg}<|user|>\n{user_msg}<|assistant|>\n"
 
 def preprocess_data(data: List[Dict], tokenizer, config: Dict) -> Dataset:
     """Preprocess data for training"""
@@ -289,7 +288,8 @@ def preprocess_data(data: List[Dict], tokenizer, config: Dict) -> Dataset:
         
         # Format prompt
         prompt = format_prompt(journal_entry, emotions)
-        full_text = prompt + response + " </s>"
+        # TinyLlama uses <|assistant|> token, response should end with <|endoftext|> or just be appended
+        full_text = prompt + response
         
         # Tokenize
         tokenized = tokenizer(
