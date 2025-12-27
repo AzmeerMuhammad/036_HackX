@@ -50,48 +50,51 @@ const ProfessionalRegister = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-purple-blue py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{ background: '#F7F3EC', fontFamily: "'Inter', sans-serif" }}>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Large floating orbs */}
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
+            opacity: [0.1, 0.2, 0.1],
           }}
           transition={{
             duration: 8,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -top-1/2 -left-1/2 w-full h-full bg-white rounded-full blur-3xl"
+          className="absolute -top-1/2 -left-1/2 w-full h-full rounded-full blur-3xl"
+          style={{ background: 'rgba(241, 90, 42, 0.1)' }}
         />
         <motion.div
           animate={{
             scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2],
+            opacity: [0.1, 0.2, 0.1],
           }}
           transition={{
             duration: 10,
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-purple-300 rounded-full blur-3xl"
+          className="absolute -bottom-1/2 -right-1/2 w-full h-full rounded-full blur-3xl"
+          style={{ background: 'rgba(241, 90, 42, 0.08)' }}
         />
 
         {/* Floating particles */}
         {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-2 h-2 bg-white/40 rounded-full"
+            className="absolute w-2 h-2 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
+              background: 'rgba(241, 90, 42, 0.3)',
             }}
             animate={{
               y: [0, -30, 0],
               x: [0, Math.random() * 20 - 10, 0],
-              opacity: [0.2, 0.6, 0.2],
+              opacity: [0.1, 0.3, 0.1],
               scale: [1, 1.5, 1],
             }}
             transition={{
@@ -113,17 +116,13 @@ const ProfessionalRegister = () => {
               height: `${100 + Math.random() * 200}px`,
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              background: `radial-gradient(circle, ${
-                i % 3 === 0 ? 'rgba(167, 139, 250, 0.15)' :
-                i % 3 === 1 ? 'rgba(139, 92, 246, 0.1)' :
-                'rgba(79, 172, 254, 0.12)'
-              }, transparent)`,
+              background: `radial-gradient(circle, rgba(241, 90, 42, ${0.08 + Math.random() * 0.05}), transparent)`,
             }}
             animate={{
               y: [0, -50 - Math.random() * 50, 0],
               x: [0, Math.random() * 60 - 30, 0],
               scale: [1, 1.2, 1],
-              opacity: [0.3, 0.6, 0.3],
+              opacity: [0.2, 0.4, 0.2],
             }}
             transition={{
               duration: 8 + Math.random() * 6,
@@ -138,7 +137,7 @@ const ProfessionalRegister = () => {
         <motion.div
           className="absolute inset-0 opacity-20"
           style={{
-            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(167, 139, 250, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(79, 172, 254, 0.3) 0%, transparent 50%)',
+            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(241, 90, 42, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(241, 90, 42, 0.1) 0%, transparent 50%)',
           }}
           animate={{
             backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
@@ -167,14 +166,14 @@ const ProfessionalRegister = () => {
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="inline-block mb-4"
             >
-              <div className="w-20 h-20 bg-gradient-primary rounded-2xl flex items-center justify-center shadow-xl mx-auto">
-                <span className="text-white text-4xl font-bold">S</span>
+              <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl mx-auto" style={{ background: '#F15A2A' }}>
+                <span className="text-white text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>S</span>
               </div>
             </motion.div>
-            <h2 className="text-3xl font-bold gradient-text mb-2">
+            <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>
               Join as a Professional
             </h2>
-            <p className="text-gray-600">Create your professional account</p>
+            <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.7 }}>Create your professional account</p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -312,13 +311,19 @@ const ProfessionalRegister = () => {
             <div className="text-center pt-4 space-y-2">
               <Link
                 to="/login"
-                className="block font-medium text-primary-600 hover:text-primary-700 transition-colors"
+                className="block font-medium transition-colors"
+                style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#d14a1f'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#F15A2A'}
               >
                 Already have an account? <span className="underline">Sign in</span>
               </Link>
               <Link
                 to="/register"
-                className="block text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                className="block text-sm transition-colors"
+                style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.7 }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
               >
                 Register as a user instead
               </Link>
@@ -327,7 +332,7 @@ const ProfessionalRegister = () => {
         </div>
 
         {/* Footer Text */}
-        <div className="flex items-center justify-center space-x-2 text-white/80 text-sm">
+        <div className="flex items-center justify-center space-x-2 text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.6 }}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>

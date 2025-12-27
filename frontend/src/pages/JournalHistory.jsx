@@ -40,7 +40,7 @@ const JournalHistory = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#F15A2A' }}></div>
         </div>
       </Layout>
     )
@@ -50,10 +50,11 @@ const JournalHistory = () => {
     <Layout>
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Journal History</h1>
+          <h1 className="text-3xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Journal History</h1>
           <Link
             to="/journal/new"
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-4 py-2 rounded-lg transition-colors"
+            style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
           >
             New Entry
           </Link>
@@ -67,10 +68,11 @@ const JournalHistory = () => {
 
         {entries.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
-            <p className="text-gray-600 mb-4">No journal entries yet.</p>
+            <p className="mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>No journal entries yet.</p>
             <Link
               to="/journal/new"
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="font-medium"
+              style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}
             >
               Create your first entry
             </Link>
@@ -90,14 +92,14 @@ const JournalHistory = () => {
                   minWidth: '180px',
                   render: (value) => (
                     <div>
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                         {new Date(value).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
                         })}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>
                         {new Date(value).toLocaleTimeString('en-US', {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -118,13 +120,13 @@ const JournalHistory = () => {
                     <div>
                       {value ? (
                         <>
-                          <span className="font-medium text-gray-900 capitalize">{value}</span>
-                          <span className="text-xs text-gray-500 ml-2">
+                          <span className="font-medium capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{value}</span>
+                          <span className="text-xs ml-2" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>
                             ({Math.round((row.checkin_intensity || 0) * 100)}%)
                           </span>
                         </>
                       ) : (
-                        <span className="text-gray-400 italic">Not specified</span>
+                        <span className="italic" style={{ fontFamily: "'Inter', sans-serif", color: '#9CA3AF' }}>Not specified</span>
                       )}
                     </div>
                   )
@@ -154,7 +156,7 @@ const JournalHistory = () => {
                     </svg>
                   ),
                   render: (value) => (
-                    <span className="font-bold text-lg text-purple-600">
+                    <span className="font-bold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
                       {value.toFixed(2)}
                     </span>
                   )
@@ -169,16 +171,17 @@ const JournalHistory = () => {
                         value.slice(0, 2).map((theme, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium"
+                            className="px-2 py-1 rounded-full text-xs font-medium"
+                            style={{ fontFamily: "'Inter', sans-serif", background: 'rgba(241, 90, 42, 0.1)', color: '#F15A2A' }}
                           >
                             {theme}
                           </span>
                         ))
                       ) : (
-                        <span className="text-gray-400 text-xs italic">None</span>
+                        <span className="text-xs italic" style={{ fontFamily: "'Inter', sans-serif", color: '#9CA3AF' }}>None</span>
                       )}
                       {value && value.length > 2 && (
-                        <span className="text-xs text-gray-500">+{value.length - 2} more</span>
+                        <span className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>+{value.length - 2} more</span>
                       )}
                     </div>
                   )
@@ -212,7 +215,8 @@ const JournalHistory = () => {
                         e.stopPropagation()
                         handleDelete(row.id)
                       }}
-                      className="px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+                      className="px-3 py-1.5 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium"
+                      style={{ fontFamily: "'Inter', sans-serif", color: '#DC2626' }}
                     >
                       Delete
                     </button>

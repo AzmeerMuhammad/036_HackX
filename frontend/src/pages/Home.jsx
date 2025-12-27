@@ -186,13 +186,13 @@ const Home = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <h1 className="text-5xl font-bold gradient-text mb-4 flex items-center justify-center gap-3">
+          <h1 className="text-5xl font-bold mb-4 flex items-center justify-center gap-3" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>
             <span>Welcome back, {user?.display_name || user?.username}!</span>
-            <svg className="w-12 h-12 text-purple-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 animate-bounce" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
             </svg>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl max-w-2xl mx-auto" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.7 }}>
             Your secure AI-powered mental health journaling platform
           </p>
         </motion.div>
@@ -215,17 +215,17 @@ const Home = () => {
                 to={card.path}
                 className="block card-3d p-8 group relative overflow-hidden"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${card.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: 'linear-gradient(to bottom right, rgba(241, 90, 42, 0.1), rgba(241, 90, 42, 0.05))' }} />
                 <div className="relative z-10">
-                  <div className="mb-6 text-purple-600">{card.iconSvg}</div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-3">
+                  <div className="mb-6" style={{ color: '#F15A2A' }}>{card.iconSvg}</div>
+                  <h2 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                     {card.title}
                   </h2>
-                  <p className="text-gray-600 text-lg">
+                  <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.7 }}>
                     {card.description}
                   </p>
                 </div>
-                <div className="absolute bottom-4 right-4 text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#F15A2A' }}>
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
@@ -242,7 +242,7 @@ const Home = () => {
           transition={{ delay: 0.3 }}
           className="mb-8"
         >
-          <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+          <h3 className="text-2xl font-semibold mb-6 text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
             Quick Access
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -259,8 +259,8 @@ const Home = () => {
                   to={link.path}
                   className="block card-3d p-6 text-center group"
                 >
-                  <div className="mb-3 text-purple-600 group-hover:text-purple-700 transition-colors">{link.iconSvg}</div>
-                  <h4 className="font-semibold text-gray-800 group-hover:text-primary-600 transition-colors">
+                  <div className="mb-3 transition-colors" style={{ color: '#F15A2A' }}>{link.iconSvg}</div>
+                  <h4 className="font-semibold transition-colors" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                     {link.title}
                   </h4>
                 </Link>
@@ -274,13 +274,14 @@ const Home = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="card-3d p-6 bg-gradient-to-r from-primary-50 to-blue-50 border-2 border-primary-100"
+          className="card-3d p-6 border-2"
+          style={{ background: 'rgba(241, 90, 42, 0.05)', borderColor: 'rgba(241, 90, 42, 0.2)' }}
         >
           <div className="flex items-center justify-center space-x-3">
-            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
-            <p className="text-gray-700 text-center">
+            <p className="text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
               <span className="font-semibold">Your privacy matters.</span> All your data is encrypted and secure.
               {user?.is_anonymous_mode && <span className="ml-2 badge badge-primary">Anonymous Mode Active</span>}
             </p>

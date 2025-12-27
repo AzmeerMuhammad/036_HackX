@@ -104,28 +104,28 @@ function ScrollTherapy({ sections, animationConfig = defaultAnimationConfig, cla
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full max-w-screen overflow-x-hidden min-h-screen text-gray-900",
+        "relative w-full max-w-screen overflow-x-hidden min-h-screen",
         className
       )}
       style={{
-        background: 'linear-gradient(to bottom right, #f5f3ff, #e0e7ff, #dbeafe, #d1fae5)'
+        fontFamily: "'Inter', sans-serif",
+        background: '#F7F3EC'
       }}
     >
-      {/* Progress Bar */}
-      <div className="fixed top-0 left-0 w-full h-0.5 bg-gradient-to-r from-purple-200/20 via-blue-200/40 to-green-200/20 z-50">
+      {/* Progress Bar - Solid orange */}
+      <div className="fixed top-0 left-0 w-full h-1 bg-gray-200/30 z-50">
         <div
-          className="h-full will-change-transform shadow-sm"
+          className="h-full will-change-transform"
           style={{
-            background: 'linear-gradient(to right, #667eea, #4facfe, #00f2fe)',
+            background: '#F15A2A',
             transform: `scaleX(${scrollProgress})`,
             transformOrigin: 'left center',
             transition: 'transform 0.15s ease-out',
-            filter: 'drop-shadow(0 0 2px rgba(102, 126, 234, 0.3))'
           }}
         />
       </div>
 
-      {/* Navigation Dots */}
+      {/* Navigation Dots - Red theme */}
       <div className="hidden sm:flex fixed right-2 sm:right-4 lg:right-8 top-1/2 -translate-y-1/2 z-40">
         <div className="space-y-3 sm:space-y-4 lg:space-y-6">
           {sections.map((section, index) => (
@@ -134,13 +134,13 @@ function ScrollTherapy({ sections, animationConfig = defaultAnimationConfig, cla
                 className={cn(
                   "nav-label absolute right-5 sm:right-6 lg:right-8 top-1/2 -translate-y-1/2",
                   "px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap",
-                  "bg-white/95 backdrop-blur-md border border-purple-200/60 shadow-xl z-50",
+                  "bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl z-50",
                   activeSection === index ? "animate-fadeOut" : "opacity-0"
                 )}
               >
                 <div className="flex items-center gap-1 sm:gap-1.5 lg:gap-2">
-                  <div className="w-1 sm:w-1.5 lg:w-2 h-1 sm:h-1.5 lg:h-2 rounded-full bg-purple-500 animate-pulse" />
-                  <span className="text-xs sm:text-sm lg:text-base">
+                  <div className="w-1 sm:w-1.5 lg:w-2 h-1 sm:h-1.5 lg:h-2 rounded-full" style={{ background: '#F15A2A' }} />
+                  <span className="text-xs sm:text-sm lg:text-base" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 500, color: '#3F3F3F' }}>
                     {section.badge || `Section ${index + 1}`}
                   </span>
                 </div>
@@ -154,19 +154,23 @@ function ScrollTherapy({ sections, animationConfig = defaultAnimationConfig, cla
                   });
                 }}
                 className={cn(
-                  "relative w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full border-2 transition-all duration-300 hover:scale-125",
-                  "before:absolute before:inset-0 before:rounded-full before:transition-all before:duration-300",
-                  activeSection === index
-                    ? "bg-purple-500 border-purple-500 shadow-lg before:animate-ping before:bg-purple-500/20"
-                    : "bg-transparent border-gray-400/40 hover:border-purple-500/60 hover:bg-purple-500/10"
+                  "relative w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full border-2 transition-all duration-300 hover:scale-125"
                 )}
+                style={activeSection === index ? {
+                  background: '#F15A2A',
+                  borderColor: '#F15A2A',
+                  boxShadow: '0 4px 6px -1px rgba(241, 90, 42, 0.3)'
+                } : {
+                  background: 'transparent',
+                  borderColor: 'rgba(156, 163, 175, 0.4)'
+                }}
                 aria-label={`Go to ${section.badge || `section ${index + 1}`}`}
               />
             </div>
           ))}
         </div>
 
-        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 lg:w-px bg-gradient-to-b from-transparent via-purple-300/20 to-transparent -translate-x-1/2 -z-10" />
+        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 lg:w-px bg-gradient-to-b from-transparent via-gray-300/20 to-transparent -translate-x-1/2 -z-10" />
       </div>
 
       {/* Therapy Animation */}
@@ -205,157 +209,237 @@ function ScrollTherapy({ sections, animationConfig = defaultAnimationConfig, cla
               index === 0
                 ? "text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl"
                 : "text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl"
-            )}>
+            )}
+            style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>
               {section.subtitle ? (
                 <div className="space-y-1 sm:space-y-2">
-                  <div className="gradient-text">
+                  <div>
                     {section.title}
                   </div>
-                  <div className="text-gray-600/90 text-[0.6em] sm:text-[0.7em] font-medium tracking-wider">
+                  <div style={{ fontSize: '0.6em', fontWeight: 600, color: '#3F3F3F', opacity: 0.7, letterSpacing: '0.05em' }}>
                     {section.subtitle}
                   </div>
                 </div>
               ) : (
-                <div className="gradient-text">
+                <div>
                   {section.title}
                 </div>
               )}
             </h1>
 
             <div className={cn(
-              "text-gray-700/80 leading-relaxed mb-8 sm:mb-10 text-base sm:text-lg lg:text-xl font-light",
+              "leading-relaxed mb-8 sm:mb-10 text-base sm:text-lg lg:text-xl",
               section.align === 'center' ? "max-w-full mx-auto text-center" : "max-w-full"
-            )}>
+            )}
+            style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, color: '#3F3F3F', opacity: 0.8 }}>
               <p className="mb-3 sm:mb-4">{section.description}</p>
               {index === 0 && (
-                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600/60 mt-4 sm:mt-6">
+                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm mt-4 sm:mt-6"
+                  style={{ color: '#3F3F3F', opacity: 0.6 }}>
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <div className="w-1 h-1 rounded-full bg-purple-500 animate-pulse" />
+                    <div className="w-1 h-1 rounded-full" style={{ background: '#F15A2A' }} />
                     <span>Interactive Experience</span>
                   </div>
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <div className="w-1 h-1 rounded-full bg-purple-500 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                    <div className="w-1 h-1 rounded-full" style={{ background: '#F15A2A' }} />
                     <span>Scroll to Explore</span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Features */}
+            {/* Features with Advanced Animations */}
             {section.features && (
-              <div className="grid gap-3 sm:gap-4 mb-8 sm:mb-10">
-                {section.features.map((feature, featureIndex) => (
+              <div className={cn(
+                "mb-8 sm:mb-10",
+                section.id === 'therapists'
+                  ? "flex justify-center"
+                  : ""
+              )}>
+                <div className={cn(
+                  section.id === 'therapists'
+                    ? "grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-5xl"
+                    : "grid gap-3 sm:gap-4"
+                )}>
+                {section.features.map((feature, featureIndex) => {
+                  // Define icons for each feature
+                  const getIcon = () => {
+                    if (feature.title.includes('Confidential')) {
+                      return (
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      );
+                    } else if (feature.title.includes('Licensed')) {
+                      return (
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                      );
+                    } else if (feature.title.includes('Flexible')) {
+                      return (
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      );
+                    } else if (feature.title.includes('Streamlined')) {
+                      return (
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                      );
+                    } else if (feature.title.includes('Secure')) {
+                      return (
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                      );
+                    } else if (feature.title.includes('AI-Assisted')) {
+                      return (
+                        <svg className="w-12 h-12 sm:w-14 sm:h-14" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                      );
+                    }
+                    return null;
+                  };
+
+                  return (
                   <motion.div
                     key={feature.title}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{
-                      duration: 0.5,
-                      delay: featureIndex * 0.1,
+                      duration: 0.6,
+                      delay: featureIndex * 0.15,
                       ease: [0.23, 1, 0.32, 1]
                     }}
                     whileHover={{
-                      y: -8,
+                      y: -12,
                       scale: 1.02,
                       transition: { duration: 0.3, ease: "easeOut" }
                     }}
                     className={cn(
-                      "group relative p-4 sm:p-5 lg:p-6 rounded-lg sm:rounded-xl border border-purple-200/60 bg-white/50 backdrop-blur-sm",
-                      "transition-all duration-500 cursor-pointer overflow-hidden"
+                      "group relative p-5 sm:p-6 lg:p-7 rounded-2xl border border-gray-200/80 bg-white shadow-sm",
+                      "transition-all duration-500 cursor-pointer overflow-hidden",
+                      section.id === 'therapists' && "min-h-[280px] flex flex-col justify-center"
                     )}
+                    style={{
+                      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)'
+                    }}
                   >
-                    {/* Animated gradient background overlay */}
+                    {/* Top Accent Line */}
+                    <motion.div
+                      className="absolute top-0 left-0 right-0 h-1"
+                      style={{
+                        background: '#F15A2A',
+                        transformOrigin: 'left'
+                      }}
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                    />
+
+                    {/* Subtle overlay */}
                     <motion.div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(79, 172, 254, 0.1) 100%)'
+                        background: 'rgba(241, 90, 42, 0.05)'
                       }}
                     />
 
-                    {/* Shimmer effect on hover */}
+                    {/* Shimmer effect */}
                     <motion.div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100"
                       initial={{ x: '-100%' }}
                       whileHover={{ x: '100%' }}
                       transition={{ duration: 0.8, ease: "easeInOut" }}
                       style={{
-                        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent)',
+                        background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent)',
                       }}
                     />
 
-                    {/* Enhanced shadow layers */}
-                    <div className="absolute inset-0 rounded-lg sm:rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                    {/* Enhanced shadow on hover */}
+                    <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
                       style={{
-                        boxShadow: '0 20px 50px -12px rgba(139, 92, 246, 0.25), 0 0 0 1px rgba(167, 139, 250, 0.1)'
+                        boxShadow: '0 20px 50px -12px rgba(241, 90, 42, 0.15)'
                       }}
                     />
 
-                    <div className="flex items-start gap-3 sm:gap-4 relative z-10">
-                      {/* Animated icon/dot with pulse effect */}
-                      <motion.div
-                        className="relative mt-1.5 sm:mt-2 flex-shrink-0"
-                        whileHover={{ scale: 1.3, rotate: 180 }}
-                        transition={{ duration: 0.4, ease: "easeOut" }}
-                      >
-                        <div className="w-3 sm:w-4 h-3 sm:h-4 rounded-full bg-gradient-to-br from-purple-400 to-blue-500 shadow-lg" />
-                        <motion.div
-                          className="absolute inset-0 rounded-full bg-purple-400"
-                          animate={{
-                            scale: [1, 1.5, 1],
-                            opacity: [0.5, 0, 0.5]
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        />
-                      </motion.div>
+                    <div className={cn(
+                      "flex flex-col items-center text-center relative z-10",
+                      section.id === 'therapists' ? "space-y-3 sm:space-y-4" : "flex-row items-start gap-3 sm:gap-4"
+                    )}>
+                      {/* Icon */}
+                      {section.id !== 'therapists' && (
+                        <div className="flex-shrink-0">
+                          {getIcon()}
+                        </div>
+                      )}
 
-                      <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
+                      <div className={cn(
+                        "space-y-1.5 sm:space-y-2",
+                        section.id === 'therapists' ? "w-full" : "flex-1 min-w-0"
+                      )}>
+                        {/* Icon for therapists section (centered on top) */}
+                        {section.id === 'therapists' && (
+                          <div className="flex justify-center mb-3">
+                            {getIcon()}
+                          </div>
+                        )}
+
                         <motion.h3
-                          className="font-semibold text-gray-900 text-base sm:text-lg group-hover:text-purple-700 transition-colors duration-300"
-                          whileHover={{ x: 4 }}
+                          className={cn(
+                            "font-bold text-base sm:text-lg transition-colors duration-300",
+                            section.id === 'therapists' && "text-center"
+                          )}
+                          style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
+                          whileHover={{ color: '#F15A2A' }}
                           transition={{ duration: 0.2 }}
                         >
                           {feature.title}
                         </motion.h3>
-                        <p className="text-gray-700/80 leading-relaxed text-sm sm:text-base group-hover:text-gray-900 transition-colors duration-300">
+                        <p className={cn(
+                          "leading-relaxed text-sm sm:text-base transition-colors duration-300",
+                          section.id === 'therapists' && "text-center"
+                        )}
+                          style={{ fontFamily: "'Inter', sans-serif", fontWeight: 400, color: '#3F3F3F', opacity: 0.8 }}>
                           {feature.description}
                         </p>
                       </div>
 
-                      {/* Animated corner accent */}
+                      {/* Corner accent */}
                       <motion.div
-                        className="absolute top-0 right-0 w-16 h-16 opacity-0 group-hover:opacity-100"
+                        className="absolute top-0 right-0 w-20 h-20 opacity-0 group-hover:opacity-100"
                         initial={{ scale: 0, rotate: 0 }}
                         whileHover={{ scale: 1, rotate: 45 }}
                         transition={{ duration: 0.4 }}
                         style={{
-                          background: 'linear-gradient(135deg, rgba(167, 139, 250, 0.1), transparent)',
-                          borderTopRightRadius: '0.75rem'
+                          background: 'radial-gradient(circle at top right, rgba(241, 90, 42, 0.08), transparent 60%)',
+                          borderTopRightRadius: '1rem'
                         }}
                       />
                     </div>
 
-                    {/* Bottom gradient border accent */}
+                    {/* Bottom shadow gradient */}
                     <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 opacity-0 group-hover:opacity-100"
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className="absolute bottom-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 blur-sm"
                       style={{
-                        background: 'linear-gradient(90deg, #a78bfa, #8b5cf6, #4facfe)',
-                        transformOrigin: 'left'
+                        background: 'rgba(241, 90, 42, 0.3)',
                       }}
+                      initial={{ opacity: 0 }}
+                      whileHover={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
                     />
                   </motion.div>
-                ))}
+                  );
+                })}
+                </div>
               </div>
             )}
 
-            {/* Actions */}
+            {/* Action Buttons */}
             {section.actions && (
               <div className={cn(
                 "flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4",
@@ -364,20 +448,54 @@ function ScrollTherapy({ sections, animationConfig = defaultAnimationConfig, cla
                 (!section.align || section.align === 'left') && "justify-start"
               )}>
                 {section.actions.map((action, actionIndex) => (
-                  <Link
+                  <motion.div
                     key={action.label}
-                    to={action.to}
-                    className={cn(
-                      "group relative px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-medium transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] text-sm sm:text-base",
-                      "hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 w-full sm:w-auto text-center",
-                      action.variant === 'primary'
-                        ? "btn-primary text-white shadow-lg"
-                        : "border-2 border-purple-200/60 bg-white/50 backdrop-blur-sm hover:bg-purple-50/50 hover:border-purple-300/30 text-gray-900"
-                    )}
-                    style={{ animationDelay: `${actionIndex * 0.1 + 0.2}s` }}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{
+                      duration: 0.5,
+                      delay: actionIndex * 0.1 + 0.2,
+                      ease: [0.23, 1, 0.32, 1]
+                    }}
+                    className="w-full sm:w-auto"
                   >
-                    <span className="relative z-10">{action.label}</span>
-                  </Link>
+                    <Link
+                      to={action.to}
+                      className={cn(
+                        "group relative px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base",
+                        "focus:outline-none w-full sm:w-auto text-center inline-block overflow-hidden",
+                        action.variant === 'primary'
+                          ? "shadow-lg"
+                          : "border-2 border-gray-300 bg-white/80 backdrop-blur-sm hover:bg-gray-50 hover:border-gray-400"
+                      )}
+                      style={action.variant === 'primary' ? {
+                        background: '#F15A2A',
+                        color: '#FFFFFF',
+                        boxShadow: '0 10px 25px -5px rgba(241, 90, 42, 0.3)',
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 600
+                      } : {
+                        fontFamily: "'Inter', sans-serif",
+                        fontWeight: 600,
+                        color: '#3F3F3F'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (action.variant === 'primary') {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 20px 40px -10px rgba(241, 90, 42, 0.4)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (action.variant === 'primary') {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 10px 25px -5px rgba(241, 90, 42, 0.3)';
+                        }
+                      }}
+                    >
+                      <span className="relative z-10">{action.label}</span>
+                    </Link>
+                  </motion.div>
                 ))}
               </div>
             )}

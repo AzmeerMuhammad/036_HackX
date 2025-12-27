@@ -175,12 +175,12 @@ const JournalNew = () => {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-10 h-10" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <h1 className="text-4xl font-bold gradient-text">New Journal Entry</h1>
+            <h1 className="text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>New Journal Entry</h1>
           </div>
-          <p className="text-gray-600">Express your thoughts and let AI provide insights</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Express your thoughts and let AI provide insights</p>
         </motion.div>
 
         {!result ? (
@@ -205,8 +205,8 @@ const JournalNew = () => {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <label className="block text-sm font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>How are you feeling? (Optional)</span>
@@ -221,11 +221,11 @@ const JournalNew = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <label className="block text-sm font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
-                <span>Intensity: <span className="text-primary-600 font-bold">{Math.round(checkinIntensity * 100)}%</span></span>
+                <span>Intensity: <span className="font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{Math.round(checkinIntensity * 100)}%</span></span>
               </label>
               <div className="relative">
                 <input
@@ -237,7 +237,7 @@ const JournalNew = () => {
                   onChange={(e) => setCheckinIntensity(parseFloat(e.target.value))}
                   className="w-full h-3 bg-gray-200 rounded-full appearance-none cursor-pointer slider"
                   style={{
-                    background: `linear-gradient(to right, #667eea ${checkinIntensity * 100}%, #e5e7eb ${checkinIntensity * 100}%)`
+                    background: `linear-gradient(to right, #F15A2A ${checkinIntensity * 100}%, #e5e7eb ${checkinIntensity * 100}%)`
                   }}
                 />
               </div>
@@ -250,8 +250,8 @@ const JournalNew = () => {
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <label className="block text-sm font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                   </svg>
                   <span>Journal Entry <span className="text-red-500">*</span></span>
@@ -272,8 +272,9 @@ const JournalNew = () => {
                     className={`relative overflow-hidden flex items-center gap-3 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 border-2 ${
                       isListening
                         ? 'bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white shadow-2xl shadow-red-500/60 border-red-300'
-                        : 'bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 text-white shadow-xl shadow-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/50 border-purple-300'
+                        : 'text-white shadow-xl hover:shadow-2xl'
                     }`}
+                    style={!isListening ? { background: '#F15A2A', borderColor: 'rgba(241, 90, 42, 0.2)', fontFamily: "'Inter', sans-serif" } : { fontFamily: "'Inter', sans-serif" }}
                   >
                     {/* Animated shimmer background */}
                     {!isListening && (
@@ -522,7 +523,8 @@ const JournalNew = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 rounded-xl font-medium transition-all"
+              style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
             >
               {loading ? (
                 <>
@@ -561,8 +563,8 @@ const JournalNew = () => {
 
             {/* AI Summary */}
             <div className="card-3d p-6">
-              <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center space-x-2">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h3 className="font-bold text-lg mb-3 flex items-center space-x-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <span>AI Summary</span>
@@ -573,8 +575,8 @@ const JournalNew = () => {
             {/* Scores */}
             <div className="grid grid-cols-2 gap-4">
               <div className="card-3d p-6 text-center">
-                <div className="text-sm text-gray-600 mb-2">Sentiment Score</div>
-                <div className={`text-4xl font-bold ${result.sentiment_score >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
+                <div className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Sentiment Score</div>
+                <div className={`text-4xl font-bold ${result.sentiment_score >= 0 ? 'text-green-600' : 'text-orange-600'}`} style={{ fontFamily: "'Inter', sans-serif" }}>
                   {result.sentiment_score > 0 ? '+' : ''}{result.sentiment_score.toFixed(2)}
                 </div>
                 <div className="text-xs text-gray-500 mt-2 flex items-center justify-center gap-1">
@@ -596,8 +598,8 @@ const JournalNew = () => {
                 </div>
               </div>
               <div className="card-3d p-6 text-center">
-                <div className="text-sm text-gray-600 mb-2">Intensity Score</div>
-                <div className="text-4xl font-bold text-primary-600">
+                <div className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Intensity Score</div>
+                <div className="text-4xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>
                   {result.intensity_score.toFixed(2)}
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
@@ -609,8 +611,8 @@ const JournalNew = () => {
             {/* Key Themes */}
             {result.key_themes && result.key_themes.length > 0 && (
               <div className="card-3d p-6">
-                <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h3 className="font-bold text-lg mb-3 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                   <span>Key Themes</span>
@@ -669,7 +671,8 @@ const JournalNew = () => {
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => navigate('/chat')}
-                      className="btn-primary px-6 py-3"
+                      className="px-6 py-3 rounded-xl font-medium transition-all"
+                      style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                     >
                       Start Chat Now
                     </motion.button>
@@ -689,7 +692,8 @@ const JournalNew = () => {
                   setCheckinMood('')
                   setCheckinIntensity(0.5)
                 }}
-                className="flex-1 py-3 bg-white border-2 border-gray-300 text-gray-800 rounded-xl hover:bg-gray-50 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-white rounded-xl hover:bg-gray-50 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
+                style={{ border: '2px solid rgba(241, 90, 42, 0.2)', color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -700,7 +704,8 @@ const JournalNew = () => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/journal/history')}
-                className="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
+                className="flex-1 py-3 flex items-center justify-center gap-2 rounded-xl font-medium transition-all"
+                style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

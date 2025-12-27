@@ -8,16 +8,16 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#f5f3ff',
-          100: '#ede9fe',
-          200: '#ddd6fe',
-          300: '#c4b5fd',
-          400: '#a78bfa',
-          500: '#8b5cf6',
-          600: '#7c3aed',
-          700: '#6d28d9',
-          800: '#5b21b6',
-          900: '#4c1d95',
+          50: '#fef2ed',
+          100: '#fde4d7',
+          200: '#fbc9af',
+          300: '#f9ad87',
+          400: '#f7925f',
+          500: '#F15A2A',
+          600: '#d14a1f',
+          700: '#b13b17',
+          800: '#912c0f',
+          900: '#711d08',
         },
         purple: {
           50: '#faf5ff',
@@ -58,10 +58,10 @@ export default {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-primary': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'gradient-secondary': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'gradient-purple-blue': 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #4facfe 100%)',
-        'gradient-calm': 'linear-gradient(to bottom right, #f5f3ff, #e0e7ff, #dbeafe)',
+        'gradient-primary': '#F15A2A',
+        'gradient-secondary': 'linear-gradient(135deg, #F15A2A 0%, #d14a1f 100%)',
+        'gradient-purple-blue': '#F7F3EC',
+        'gradient-calm': '#F7F3EC',
       },
       boxShadow: {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',

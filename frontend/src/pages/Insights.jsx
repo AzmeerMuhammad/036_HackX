@@ -63,7 +63,7 @@ const Insights = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#F15A2A' }}></div>
         </div>
       </Layout>
     )
@@ -72,7 +72,7 @@ const Insights = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">7-Day Insights</h1>
+        <h1 className="text-3xl font-bold mb-6" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>7-Day Insights</h1>
 
         {insights ? (
           <div className="space-y-6">
@@ -81,27 +81,27 @@ const Insights = () => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-xl shadow-md p-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Overview</h2>
+              <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Overview</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600">Total Entries</div>
-                  <div className="text-2xl font-bold text-primary-600">{insights.totalEntries}</div>
+                <div className="rounded-lg p-4" style={{ background: 'rgba(241, 90, 42, 0.05)' }}>
+                  <div className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Total Entries</div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>{insights.totalEntries}</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600">Avg Sentiment</div>
-                  <div className={`text-2xl font-bold ${insights.avgSentiment >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Avg Sentiment</div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: insights.avgSentiment >= 0 ? '#10B981' : '#DC2626' }}>
                     {insights.avgSentiment > 0 ? '+' : ''}{insights.avgSentiment.toFixed(2)}
                   </div>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600">Avg Intensity</div>
-                  <div className="text-2xl font-bold text-purple-600">
+                <div className="rounded-lg p-4" style={{ background: 'rgba(241, 90, 42, 0.05)' }}>
+                  <div className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Avg Intensity</div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
                     {insights.avgIntensity.toFixed(2)}
                   </div>
                 </div>
                 <div className="bg-yellow-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-600">Risk Flags</div>
-                  <div className="text-2xl font-bold text-yellow-600">{insights.riskCount}</div>
+                  <div className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Risk Flags</div>
+                  <div className="text-2xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#D97706' }}>{insights.riskCount}</div>
                 </div>
               </div>
             </motion.div>
@@ -112,17 +112,17 @@ const Insights = () => {
               transition={{ delay: 0.1 }}
               className="bg-white rounded-xl shadow-md p-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Trend</h2>
+              <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Trend</h2>
               <div className={`p-4 rounded-lg ${
                 insights.trend === 'positive' ? 'bg-green-50 border border-green-200' :
                 insights.trend === 'negative' ? 'bg-red-50 border border-red-200' :
                 'bg-gray-50 border border-gray-200'
               }`}>
-                <div className="text-lg font-semibold text-gray-900 capitalize">
+                <div className="text-lg font-semibold capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   {insights.trend} trend detected
                 </div>
                 {insights.trend === 'negative' && insights.riskCount > 0 && (
-                  <p className="text-sm text-gray-700 mt-2">
+                  <p className="text-sm mt-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                     Consider starting a chat session for additional support.
                   </p>
                 )}
@@ -136,12 +136,13 @@ const Insights = () => {
                 transition={{ delay: 0.2 }}
                 className="bg-white rounded-xl shadow-md p-6"
               >
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Top Themes</h2>
+                <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Top Themes</h2>
                 <div className="flex flex-wrap gap-2">
                   {insights.topThemes.map((theme, idx) => (
                     <span
                       key={idx}
-                      className="px-4 py-2 bg-primary-100 text-primary-800 rounded-full font-medium"
+                      className="px-4 py-2 rounded-full font-medium"
+                      style={{ fontFamily: "'Inter', sans-serif", background: 'rgba(241, 90, 42, 0.1)', color: '#F15A2A' }}
                     >
                       {theme}
                     </span>
@@ -152,8 +153,8 @@ const Insights = () => {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
-            <p className="text-gray-600">Not enough data for 7-day insights.</p>
-            <p className="text-gray-600 mt-2">Create more journal entries to see insights.</p>
+            <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Not enough data for 7-day insights.</p>
+            <p className="mt-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Create more journal entries to see insights.</p>
           </div>
         )}
       </div>
