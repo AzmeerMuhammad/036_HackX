@@ -1,0 +1,40 @@
+# ML and Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Deep Learning - GPU Enabled
+# Install PyTorch with CUDA support first:
+# For CUDA 11.8: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# For CUDA 12.1: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# For CUDA 12.4: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+# Check your CUDA version with: nvidia-smi
+# Then install other packages: pip install -r requirements\ gpu.txt
+torch>=2.0.0
+torchvision>=0.15.0
+torchaudio>=2.0.0
+transformers>=4.30.0
+accelerate>=0.26.0
+
+# Parameter-Efficient Fine-Tuning (LoRA) - GPU Enabled
+peft>=0.6.0
+bitsandbytes>=0.41.0  # GPU-accelerated quantization
+
+# Dataset Download and Management
+kagglehub>=0.2.0
+datasets>=2.14.0
+
+# HTTP Requests (for data downloading)
+requests>=2.31.0
+
+# Utilities
+tqdm>=4.65.0
+
+# Stratified splitting for multi-label data (optional but recommended)
+# iterative-stratification>=0.1.7
+
+# Evaluation Metrics (optional but recommended)
+# rouge-score>=0.1.2
+# bert-score>=0.3.13
+
