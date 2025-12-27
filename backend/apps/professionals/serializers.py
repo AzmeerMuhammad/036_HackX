@@ -11,9 +11,10 @@ class ProfessionalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Professional
-        fields = ('id', 'user', 'specialization', 'availability', 'verified', 'city', 
+        fields = ('id', 'user', 'specialization', 'availability', 'verified', 'city',
+                  'professional_type', 'pmdc_id', 'degree_picture', 'university_name',
                   'created_at', 'is_profile_complete', 'profile_completion_percentage', 'missing_fields')
-        read_only_fields = ('id', 'created_at', 'is_profile_complete', 'profile_completion_percentage', 'missing_fields')
+        read_only_fields = ('id', 'created_at', 'verified', 'is_profile_complete', 'profile_completion_percentage', 'missing_fields')
     
     def get_is_profile_complete(self, obj):
         return obj.is_profile_complete()

@@ -11,7 +11,6 @@ const ProfessionalRegister = () => {
     display_name: '',
     email: '',
     is_professional: true,
-    professional_type: '',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,11 +27,6 @@ const ProfessionalRegister = () => {
 
     if (formData.password !== formData.password_confirm) {
       setError('Passwords do not match')
-      return
-    }
-
-    if (!formData.professional_type) {
-      setError('Please select your professional type')
       return
     }
 
@@ -191,25 +185,6 @@ const ProfessionalRegister = () => {
             )}
 
             <div className="space-y-4">
-              <div>
-                <label htmlFor="professional_type" className="block text-sm font-medium text-gray-700 mb-2">
-                  Professional Type <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="professional_type"
-                  name="professional_type"
-                  required
-                  value={formData.professional_type}
-                  onChange={handleChange}
-                  className="input-modern"
-                >
-                  <option value="">Select your profession</option>
-                  <option value="psychiatrist">Psychiatrist</option>
-                  <option value="therapist">Therapist</option>
-                  <option value="psychologist">Psychologist</option>
-                </select>
-              </div>
-
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                   Username <span className="text-red-500">*</span>
