@@ -67,11 +67,12 @@ coverage.xml
 
 # AI_Work - ML models and data
 AI_Work/data/
-AI_Work/models/
+AI_Work/models/checkpoints
 AI_Work/results/
-AI_Work/__pycache__/
+AI_Work/models/
 *.pkl
 *.h5
 *.pt
 *.pth
 aivenv/
+AI_Work/__pycache__/
