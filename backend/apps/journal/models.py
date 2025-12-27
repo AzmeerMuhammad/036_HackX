@@ -30,8 +30,10 @@ class JournalEntry(models.Model):
     # AI Analysis results
     ai_summary = models.TextField(blank=True, help_text="AI-generated summary of the entry")
     sentiment_score = models.FloatField(default=0.0, help_text="Sentiment: -1.0 (negative) to +1.0 (positive)")
+    sentiment_label = models.CharField(max_length=20, default='neutral', help_text="Sentiment label: positive, neutral, or negative")
     intensity_score = models.FloatField(default=0.0, help_text="Emotional intensity: 0.0 to 1.0")
     key_themes = models.JSONField(default=list, blank=True, help_text="List of key themes identified")
+    detected_emotions = models.JSONField(default=list, blank=True, help_text="List of detected emotions with confidence scores")
     risk_flags = models.JSONField(default=dict, blank=True, help_text="Risk flags detected (e.g., suicidal_ideation)")
     suggest_start_chat = models.BooleanField(default=False, help_text="AI suggests starting a chat session")
     
