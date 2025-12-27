@@ -1,19 +1,19 @@
 """
-Generate mental health notes summaries from journal entries using the fine-tuned model.
+Generate empathetic responses from journal entries and emotions using the fine-tuned model.
 
 Usage:
-    python predict_mental_health.py --text "Your journal entry here..."
-    python predict_mental_health.py --file journal_entry.txt
+    python predict_mental_health.py --text "Your journal entry" --emotions "sad:0.8,anxious:0.6"
+    python predict_mental_health.py --file journal_entry.json
 """
 
 import json
 import torch
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List
 import argparse
 import warnings
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 
 warnings.filterwarnings('ignore')
@@ -80,48 +80,74 @@ def load_model_and_tokenizer(
     model.eval()
     return model, tokenizer
 
-def format_prompt(journal_entry: str, summary_type: str = "summary") -> str:
-    """Format the prompt for the model"""
-    if summary_type == "empathetic":
-        return f"""<s>[INST] <<SYS>>
-You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry.
+def parse_emotions(emotions_str: str) -> List[Dict]:
+    """Parse emotions string into list of emotion dictionaries
+    
+    Format: "emotion1:intensity1,emotion2:intensity2" or "emotion1,emotion2"
+    """
+    emotions = []
+    
+    if not emotions_str:
+        return emotions
+    
+    for item in emotions_str.split(','):
+        item = item.strip()
+        if ':' in item:
+            emotion, intensity = item.split(':', 1)
+            try:
+                intensity = float(intensity)
+            except:
+                intensity = 0.7
+        else:
+            emotion = item
+            intensity = 0.7  # Default intensity
+        
+        emotions.append({
+            "emotion": emotion.strip(),
+            "intensity": max(0.0, min(1.0, intensity))  # Clamp between 0 and 1
+        })
+    
+    return emotions
+
+def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
+    """Format the prompt for the model with journal entry and emotions"""
+    # Format emotions list
+    emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
+                             for e in emotions])
+    
+    return f"""<s>[INST] <<SYS>>
+You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
 <</SYS>>
 
 Journal Entry: {journal_entry}
 
-Psychological Response: [/INST]"""
-    else:
-        return f"""<s>[INST] <<SYS>>
-You are a mental health professional. Generate a concise psychological summary and breakdown of the following journal entry.
-<</SYS>>
+Identified Emotions: {emotions_str}
 
-Journal Entry: {journal_entry}
+Empathetic Response: [/INST]"""
 
-Psychological Summary: [/INST]"""
-
-def generate_summary(
+def generate_response(
     model,
     tokenizer,
     journal_entry: str,
+    emotions: List[Dict],
     generation_config: Dict,
-    summary_type: str = "summary",
     max_input_length: int = 1024
 ) -> str:
     """
-    Generate psychological summary for a journal entry
+    Generate empathetic response for a journal entry with emotions
     
     Args:
         model: Fine-tuned model
         tokenizer: Tokenizer
         journal_entry: Input journal entry text
+        emotions: List of emotion dicts with 'emotion' and 'intensity' keys
         generation_config: Generation parameters
-        summary_type: "summary" or "empathetic"
         max_input_length: Maximum input length
     
     Returns:
-        Generated summary text
+        Generated empathetic response text
     """
-    prompt = format_prompt(journal_entry, summary_type)
+    prompt = format_prompt(journal_entry, emotions)
     
     # Tokenize
     inputs = tokenizer(
@@ -151,40 +177,34 @@ def generate_summary(
     # Decode
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
-    # Extract only the summary part (after the prompt)
-    if summary_type == "empathetic":
-        if "Psychological Response:" in generated_text:
-            summary = generated_text.split("Psychological Response:")[-1].strip()
-        else:
-            summary = generated_text.replace(prompt, "").strip()
+    # Extract only the response part (after the prompt)
+    if "Empathetic Response:" in generated_text:
+        response = generated_text.split("Empathetic Response:")[-1].strip()
     else:
-        if "Psychological Summary:" in generated_text:
-            summary = generated_text.split("Psychological Summary:")[-1].strip()
-        else:
-            # Fallback: remove prompt
-            summary = generated_text.replace(prompt, "").strip()
+        # Fallback: remove prompt
+        response = generated_text.replace(prompt, "").strip()
     
-    return summary
+    return response
 
-def predict_from_text(
+def predict_from_input(
     journal_entry: str,
-    model_path: str = "models/mental_health_summary_model",
+    emotions: List[Dict],
+    model_path: str = "models/mental_health_empathetic_model",
     base_model: str = "meta-llama/Llama-2-7b-chat-hf",
-    config_path: str = "config_mental_health.json",
-    summary_type: str = "summary"
+    config_path: str = "config_mental_health.json"
 ) -> str:
     """
-    Generate summary from journal entry text
+    Generate empathetic response from journal entry and emotions
     
     Args:
         journal_entry: Input journal entry
+        emotions: List of emotion dicts with 'emotion' and 'intensity'
         model_path: Path to fine-tuned model
         base_model: Base model name
         config_path: Path to config file
-        summary_type: "summary" or "empathetic"
     
     Returns:
-        Generated summary
+        Generated empathetic response
     """
     # Load config
     config_file = BASE_DIR / config_path
@@ -209,33 +229,38 @@ def predict_from_text(
     # Load model
     model, tokenizer = load_model_and_tokenizer(model_path, base_model)
     
-    # Generate summary
-    print(f"\n📝 Generating {summary_type}...")
-    summary = generate_summary(
-        model, tokenizer, journal_entry, generation_config, summary_type
+    # Generate response
+    print(f"\n💬 Generating empathetic response...")
+    response = generate_response(
+        model, tokenizer, journal_entry, emotions, generation_config
     )
     
-    return summary
+    return response
 
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description="Generate mental health summaries from journal entries"
+        description="Generate empathetic responses from journal entries and emotions"
     )
     parser.add_argument(
         "--text",
         type=str,
-        help="Journal entry text to summarize"
+        help="Journal entry text"
+    )
+    parser.add_argument(
+        "--emotions",
+        type=str,
+        help="Comma-separated emotions with intensities (e.g., 'sad:0.8,anxious:0.6' or 'sad,anxious')"
     )
     parser.add_argument(
         "--file",
         type=str,
-        help="Path to file containing journal entry"
+        help="Path to JSON file with 'journal_entry' and 'emotions' fields"
     )
     parser.add_argument(
         "--model_path",
         type=str,
-        default="models/mental_health_summary_model",
+        default="models/mental_health_empathetic_model",
         help="Path to fine-tuned model"
     )
     parser.add_argument(
@@ -251,13 +276,6 @@ def main():
         help="Path to config file"
     )
     parser.add_argument(
-        "--type",
-        type=str,
-        choices=["summary", "empathetic"],
-        default="summary",
-        help="Type of output: 'summary' for psychological summary, 'empathetic' for empathetic response"
-    )
-    parser.add_argument(
         "--output",
         type=str,
         help="Path to save output (optional)"
@@ -265,19 +283,31 @@ def main():
     
     args = parser.parse_args()
     
-    # Get journal entry
+    # Get journal entry and emotions
     journal_entry = None
+    emotions = []
     
-    if args.text:
-        journal_entry = args.text
-    elif args.file:
+    if args.file:
         file_path = Path(args.file)
         if not file_path.exists():
             print(f"❌ File not found: {file_path}")
             return
         with open(file_path, 'r', encoding='utf-8') as f:
-            journal_entry = f.read()
-    else:
+            data = json.load(f)
+            journal_entry = data.get("journal_entry", "")
+            if "emotions" in data:
+                if isinstance(data["emotions"], list):
+                    emotions = data["emotions"]
+                elif isinstance(data["emotions"], str):
+                    emotions = parse_emotions(data["emotions"])
+    
+    if args.text:
+        journal_entry = args.text
+    
+    if args.emotions:
+        emotions = parse_emotions(args.emotions)
+    
+    if not journal_entry or not journal_entry.strip():
         # Interactive mode
         print("📝 Enter journal entry (press Ctrl+D or Ctrl+Z when done):")
         try:
@@ -287,19 +317,27 @@ def main():
                 lines.append(line)
         except EOFError:
             journal_entry = "\n".join(lines)
+        
+        if not emotions:
+            emotions_str = input("\nEnter emotions (format: 'emotion1:intensity1,emotion2:intensity2'): ").strip()
+            emotions = parse_emotions(emotions_str)
     
     if not journal_entry or not journal_entry.strip():
         print("❌ No journal entry provided")
         return
     
+    if not emotions:
+        print("⚠️  No emotions provided, using default")
+        emotions = [{"emotion": "neutral", "intensity": 0.5}]
+    
     try:
-        # Generate summary
-        summary = predict_from_text(
+        # Generate response
+        response = predict_from_input(
             journal_entry,
+            emotions,
             args.model_path,
             args.base_model,
-            args.config,
-            args.type
+            args.config
         )
         
         # Display results
@@ -309,30 +347,32 @@ def main():
         print(journal_entry[:500] + ("..." if len(journal_entry) > 500 else ""))
         
         print("\n" + "=" * 60)
-        if args.type == "empathetic":
-            print("💬 Empathetic Psychological Response:")
-        else:
-            print("🧠 Psychological Summary:")
+        print("😊 Identified Emotions:")
         print("=" * 60)
-        print(summary)
+        for e in emotions:
+            print(f"  - {e['emotion']}: {e.get('intensity', 0.7):.1f}")
+        
+        print("\n" + "=" * 60)
+        print("💬 Empathetic Response:")
+        print("=" * 60)
+        print(response)
         
         # Save output if requested
         if args.output:
             output_path = Path(args.output)
             output_data = {
                 "journal_entry": journal_entry,
-                "summary": summary,
-                "type": args.type
+                "emotions": emotions,
+                "empathetic_response": response
             }
             with open(output_path, 'w', encoding='utf-8') as f:
                 json.dump(output_data, f, indent=2)
             print(f"\n✅ Output saved to: {output_path}")
         
     except Exception as e:
-        print(f"\n❌ Error generating summary: {e}")
+        print(f"\n❌ Error generating response: {e}")
         import traceback
         traceback.print_exc()
 
 if __name__ == "__main__":
     main()
-

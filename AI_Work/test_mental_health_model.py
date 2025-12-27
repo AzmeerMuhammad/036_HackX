@@ -1,20 +1,20 @@
 """
-Test and evaluate the fine-tuned mental health summary model.
+Test and evaluate the fine-tuned mental health empathetic response model.
 
-This script evaluates the model on test data and provides metrics
-for summary quality.
+This script evaluates the model on test data and provides metrics.
 """
 
 import json
 import torch
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
 import warnings
 
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
 from rouge_score import rouge_scorer
 import numpy as np
+import pandas as pd
 
 warnings.filterwarnings('ignore')
 
@@ -63,25 +63,31 @@ def load_model_and_tokenizer(model_path: str, base_model: str = "meta-llama/Llam
     model.eval()
     return model, tokenizer
 
-def format_prompt(journal_entry: str) -> str:
+def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
     """Format prompt for inference"""
+    emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
+                             for e in emotions])
+    
     return f"""<s>[INST] <<SYS>>
-You are a mental health professional. Generate a concise psychological summary and breakdown of the following journal entry.
+You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
 <</SYS>>
 
 Journal Entry: {journal_entry}
 
-Psychological Summary: [/INST]"""
+Identified Emotions: {emotions_str}
 
-def generate_summary(
+Empathetic Response: [/INST]"""
+
+def generate_response(
     model,
     tokenizer,
     journal_entry: str,
+    emotions: List[Dict],
     generation_config: Dict,
     max_input_length: int = 1024
 ) -> str:
-    """Generate summary for a journal entry"""
-    prompt = format_prompt(journal_entry)
+    """Generate response for a journal entry with emotions"""
+    prompt = format_prompt(journal_entry, emotions)
     
     # Tokenize
     inputs = tokenizer(
@@ -104,20 +110,20 @@ def generate_summary(
             early_stopping=generation_config.get("early_stopping", True),
             do_sample=generation_config.get("do_sample", True),
             pad_token_id=tokenizer.pad_token_id,
-            eos_token_id=tokenizer.eos_token_id
+            eos_token_id=tokenizer.eos_token_id,
+            repetition_penalty=generation_config.get("repetition_penalty", 1.1)
         )
     
     # Decode
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
-    # Extract only the summary part (after the prompt)
-    if "Psychological Summary:" in generated_text:
-        summary = generated_text.split("Psychological Summary:")[-1].strip()
+    # Extract only the response part
+    if "Empathetic Response:" in generated_text:
+        response = generated_text.split("Empathetic Response:")[-1].strip()
     else:
-        # Fallback: remove prompt
-        summary = generated_text.replace(prompt, "").strip()
+        response = generated_text.replace(prompt, "").strip()
     
-    return summary
+    return response
 
 def calculate_rouge_scores(predictions: List[str], references: List[str]) -> Dict:
     """Calculate ROUGE scores"""
@@ -147,26 +153,32 @@ def calculate_rouge_scores(predictions: List[str], references: List[str]) -> Dic
     
     return avg_scores
 
-def load_test_data(data_dir: Path) -> List[Dict]:
-    """Load test data"""
-    test_data = []
+def load_test_data(data_dir: Path, max_samples: int = 100) -> List[Dict]:
+    """Load test data from empathetic dialogues"""
+    test_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "test.csv"
     
-    # Try loading from psychological summary dataset
-    psych_dir = data_dir / "psychological_summary"
-    if psych_dir.exists():
-        json_files = list(psych_dir.glob("*.json"))
-        for json_file in json_files:
-            if "template" in json_file.name:
-                continue
-            try:
-                with open(json_file, 'r') as f:
-                    data = json.load(f)
-                if isinstance(data, list):
-                    test_data.extend(data)
-                elif isinstance(data, dict):
-                    test_data.append(data)
-            except:
-                pass
+    if not test_path.exists():
+        print(f"⚠️  Test file not found, using validation set")
+        test_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "valid.csv"
+    
+    if not test_path.exists():
+        return []
+    
+    print(f"📥 Loading test data from: {test_path}")
+    df = pd.read_csv(test_path)
+    
+    test_data = []
+    for _, row in df.head(max_samples).iterrows():
+        context = str(row.get('context', '')).strip()
+        prompt = str(row.get('prompt', '')).strip()
+        utterance = str(row.get('utterance', '')).strip()
+        
+        if prompt and context and utterance:
+            test_data.append({
+                "journal_entry": prompt,
+                "emotion": context,
+                "empathetic_response": utterance
+            })
     
     return test_data
 
@@ -178,7 +190,7 @@ def evaluate_model(
 ):
     """Evaluate model on test data"""
     print("=" * 60)
-    print("🧪 Mental Health Summary Model Evaluation")
+    print("🧪 Mental Health Empathetic Response Model Evaluation")
     print("=" * 60)
     
     # Load model
@@ -194,7 +206,8 @@ def evaluate_model(
             "num_beams": 4,
             "length_penalty": 1.2,
             "early_stopping": True,
-            "do_sample": True
+            "do_sample": True,
+            "repetition_penalty": 1.1
         }
     
     # Load test data if not provided
@@ -205,8 +218,9 @@ def evaluate_model(
         print("⚠️  No test data found. Running on sample data.")
         test_data = [
             {
-                "journal_entry": "I've been feeling really down lately. Nothing seems to bring me joy anymore, and I find myself isolating from friends and family. Work has become overwhelming, and I can't seem to focus on anything.",
-                "summary": "Patient reports symptoms of depression including anhedonia, social withdrawal, and difficulty concentrating. Work-related stress may be contributing factor."
+                "journal_entry": "I've been feeling really down lately. Nothing seems to bring me joy anymore.",
+                "emotion": "sad",
+                "empathetic_response": "I'm sorry you're going through this difficult time. It sounds like you're experiencing a period of sadness that's making it hard to find joy in things you used to enjoy."
             }
         ]
     
@@ -216,25 +230,30 @@ def evaluate_model(
     references = []
     
     for i, item in enumerate(test_data):
-        journal_entry = item.get("journal_entry", item.get("text", ""))
-        reference_summary = item.get("summary", item.get("tldr", ""))
+        journal_entry = item.get("journal_entry", "")
+        emotion = item.get("emotion", "neutral")
+        reference_response = item.get("empathetic_response", "")
         
         if not journal_entry:
             continue
         
-        print(f"\n[{i+1}/{len(test_data)}] Processing...")
-        print(f"Journal Entry: {journal_entry[:100]}...")
+        # Format emotions
+        emotions = [{"emotion": emotion, "intensity": 0.7}]
         
-        # Generate summary
-        predicted_summary = generate_summary(
-            model, tokenizer, journal_entry, generation_config
+        print(f"\n[{i+1}/{len(test_data)}] Processing...")
+        print(f"Journal Entry: {journal_entry[:80]}...")
+        print(f"Emotion: {emotion}")
+        
+        # Generate response
+        predicted_response = generate_response(
+            model, tokenizer, journal_entry, emotions, generation_config
         )
         
-        predictions.append(predicted_summary)
-        references.append(reference_summary)
+        predictions.append(predicted_response)
+        references.append(reference_response)
         
-        print(f"Reference: {reference_summary[:100]}...")
-        print(f"Predicted: {predicted_summary[:100]}...")
+        print(f"Reference: {reference_response[:80]}...")
+        print(f"Predicted: {predicted_response[:80]}...")
     
     # Calculate metrics
     print("\n📊 Calculating ROUGE scores...")
@@ -273,11 +292,11 @@ def main():
     """Main entry point"""
     import argparse
     
-    parser = argparse.ArgumentParser(description="Evaluate mental health summary model")
+    parser = argparse.ArgumentParser(description="Evaluate mental health empathetic response model")
     parser.add_argument(
         "--model_path",
         type=str,
-        default="models/mental_health_summary_model",
+        default="models/mental_health_empathetic_model",
         help="Path to fine-tuned model"
     )
     parser.add_argument(
@@ -291,6 +310,12 @@ def main():
         type=str,
         default="config_mental_health.json",
         help="Path to config file"
+    )
+    parser.add_argument(
+        "--max_samples",
+        type=int,
+        default=100,
+        help="Maximum number of test samples to evaluate"
     )
     
     args = parser.parse_args()
@@ -316,4 +341,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

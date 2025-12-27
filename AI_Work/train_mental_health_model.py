@@ -1,9 +1,9 @@
 """
-Fine-tune Llama model for generating mental health notes summaries from journal entries.
+Fine-tune Llama model for generating empathetic responses from journal entries and emotions.
 
 This script:
-1. Loads empathetic dialogues dataset (for empathetic response training)
-2. Loads psychological summary dataset (for summary generation)
+1. Loads empathetic dialogues dataset
+2. Formats data as: Journal Entry + Emotions (with intensity) -> Empathetic Response
 3. Fine-tunes Llama using LoRA for efficient training
 4. Saves the fine-tuned model for inference
 """
@@ -14,7 +14,7 @@ import torch
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 import warnings
 
 from transformers import (
@@ -58,129 +58,121 @@ def load_config(config_path: str = "config_mental_health.json") -> Dict:
     print(f"✓ Loaded config from: {config_file}")
     return config
 
+def format_emotions(emotion_label: str, intensity: float = 0.7) -> str:
+    """Format emotions with intensity for the prompt"""
+    # Map common emotion labels to more descriptive format
+    emotion_map = {
+        'sentimental': 'sentimentality',
+        'afraid': 'fear',
+        'proud': 'pride',
+        'faithful': 'faithfulness',
+        'terrified': 'terror',
+        'hopeful': 'hope',
+        'angry': 'anger',
+        'disappointed': 'disappointment',
+        'impressed': 'impression',
+        'anxious': 'anxiety',
+        'excited': 'excitement',
+        'annoyed': 'annoyance',
+        'grateful': 'gratitude',
+        'lonely': 'loneliness',
+        'ashamed': 'shame',
+        'sad': 'sadness',
+        'joyful': 'joy',
+        'nostalgic': 'nostalgia',
+        'guilty': 'guilt',
+        'surprised': 'surprise',
+        'content': 'contentment',
+        'devastated': 'devastation',
+        'embarrassed': 'embarrassment',
+        'furious': 'fury',
+        'anticipating': 'anticipation',
+        'jealous': 'jealousy',
+        'prepared': 'preparation',
+        'pensive': 'pensiveness',
+        'trusting': 'trust'
+    }
+    
+    emotion_display = emotion_map.get(emotion_label.lower(), emotion_label.lower())
+    intensity_label = "high" if intensity > 0.7 else "medium" if intensity > 0.4 else "low"
+    
+    return f"{emotion_display} (intensity: {intensity_label})"
+
 def load_empathetic_dialogues(data_dir: Path) -> List[Dict]:
     """Load and format empathetic dialogues dataset"""
     train_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "train.csv"
+    val_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "valid.csv"
     
     if not train_path.exists():
-        print(f"⚠️  Empathetic dialogues not found at {train_path}")
-        return []
+        raise FileNotFoundError(f"Empathetic dialogues not found at {train_path}")
     
     print(f"📥 Loading empathetic dialogues from: {train_path}")
-    df = pd.read_csv(train_path)
+    train_df = pd.read_csv(train_path)
     
-    # Format as instruction-following data
-    # Empathetic dialogues format: utterance, context, emotion, etc.
+    val_df = None
+    if val_path.exists():
+        print(f"📥 Loading validation set from: {val_path}")
+        val_df = pd.read_csv(val_path)
+    
     dialogues = []
     
-    # Check available columns
-    if 'utterance' in df.columns:
-        for _, row in df.iterrows():
-            context = str(row.get('context', ''))
-            utterance = str(row.get('utterance', ''))
-            prompt = str(row.get('prompt', ''))
+    # Process training data
+    for _, row in train_df.iterrows():
+        context = str(row.get('context', '')).strip()
+        prompt = str(row.get('prompt', '')).strip()
+        utterance = str(row.get('utterance', '')).strip()
+        
+        # Use prompt as journal entry, context as emotion
+        journal_entry = prompt if prompt and prompt != 'nan' else ""
+        emotion = context if context and context != 'nan' else ""
+        response = utterance if utterance and utterance != 'nan' else ""
+        
+        if journal_entry and emotion and response:
+            dialogues.append({
+                "journal_entry": journal_entry,
+                "emotion": emotion,
+                "empathetic_response": response,
+                "split": "train"
+            })
+    
+    # Process validation data if available
+    if val_df is not None:
+        for _, row in val_df.iterrows():
+            context = str(row.get('context', '')).strip()
+            prompt = str(row.get('prompt', '')).strip()
+            utterance = str(row.get('utterance', '')).strip()
             
-            # Use prompt as journal entry if available, otherwise use context
-            journal_entry = prompt if prompt and prompt != 'nan' else context
-            response = utterance
+            journal_entry = prompt if prompt and prompt != 'nan' else ""
+            emotion = context if context and context != 'nan' else ""
+            response = utterance if utterance and utterance != 'nan' else ""
             
-            if journal_entry and response and journal_entry != 'nan' and response != 'nan':
+            if journal_entry and emotion and response:
                 dialogues.append({
                     "journal_entry": journal_entry,
-                    "summary": response,
-                    "type": "empathetic_response"
+                    "emotion": emotion,
+                    "empathetic_response": response,
+                    "split": "val"
                 })
     
-    print(f"✓ Loaded {len(dialogues)} empathetic dialogue samples")
+    print(f"✓ Loaded {len([d for d in dialogues if d['split'] == 'train'])} training samples")
+    print(f"✓ Loaded {len([d for d in dialogues if d['split'] == 'val'])} validation samples")
     return dialogues
 
-def load_psychological_summary_dataset(data_dir: Path) -> List[Dict]:
-    """Load psychological summary dataset"""
-    psych_dir = data_dir / "psychological_summary"
+def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
+    """Format the prompt for the model with journal entry and emotions"""
+    # Format emotions list
+    emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
+                             for e in emotions])
     
-    if not psych_dir.exists():
-        print(f"⚠️  Psychological summary dataset not found at {psych_dir}")
-        return []
-    
-    summaries = []
-    
-    # Try loading JSON files
-    json_files = list(psych_dir.glob("*.json"))
-    for json_file in json_files:
-        if "template" in json_file.name:
-            continue
-        
-        print(f"📥 Loading: {json_file}")
-        try:
-            with open(json_file, 'r') as f:
-                data = json.load(f)
-            
-            if isinstance(data, list):
-                for item in data:
-                    if 'journal_entry' in item and 'summary' in item:
-                        summaries.append({
-                            "journal_entry": str(item['journal_entry']),
-                            "summary": str(item['summary']),
-                            "type": "psychological_summary"
-                        })
-            elif isinstance(data, dict):
-                if 'journal_entry' in data and 'summary' in data:
-                    summaries.append({
-                        "journal_entry": str(data['journal_entry']),
-                        "summary": str(data['summary']),
-                        "type": "psychological_summary"
-                    })
-        except Exception as e:
-            print(f"⚠️  Error loading {json_file}: {e}")
-    
-    # Try loading CSV files
-    csv_files = list(psych_dir.glob("*.csv"))
-    for csv_file in csv_files:
-        print(f"📥 Loading: {csv_file}")
-        try:
-            df = pd.read_csv(csv_file)
-            # Look for common column names
-            entry_col = None
-            summary_col = None
-            
-            for col in df.columns:
-                col_lower = col.lower()
-                if 'entry' in col_lower or 'text' in col_lower or 'post' in col_lower:
-                    entry_col = col
-                if 'summary' in col_lower or 'tldr' in col_lower or 'note' in col_lower:
-                    summary_col = col
-            
-            if entry_col and summary_col:
-                for _, row in df.iterrows():
-                    summaries.append({
-                        "journal_entry": str(row[entry_col]),
-                        "summary": str(row[summary_col]),
-                        "type": "psychological_summary"
-                    })
-        except Exception as e:
-            print(f"⚠️  Error loading {csv_file}: {e}")
-    
-    print(f"✓ Loaded {len(summaries)} psychological summary samples")
-    return summaries
-
-def format_prompt(journal_entry: str, summary_type: str = "summary") -> str:
-    """Format the prompt for the model"""
-    if summary_type == "empathetic_response":
-        return f"""<s>[INST] <<SYS>>
-You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry.
+    return f"""<s>[INST] <<SYS>>
+You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
 <</SYS>>
 
 Journal Entry: {journal_entry}
 
-Psychological Response: [/INST]"""
-    else:
-        return f"""<s>[INST] <<SYS>>
-You are a mental health professional. Generate a concise psychological summary and breakdown of the following journal entry.
-<</SYS>>
+Identified Emotions: {emotions_str}
 
-Journal Entry: {journal_entry}
-
-Psychological Summary: [/INST]"""
+Empathetic Response: [/INST]"""
 
 def preprocess_data(data: List[Dict], tokenizer, config: Dict) -> Dataset:
     """Preprocess data for training"""
@@ -193,12 +185,15 @@ def preprocess_data(data: List[Dict], tokenizer, config: Dict) -> Dataset:
     
     for item in data:
         journal_entry = item["journal_entry"]
-        summary = item["summary"]
-        data_type = item.get("type", "summary")
+        emotion = item["emotion"]
+        response = item["empathetic_response"]
+        
+        # Create emotions list (using emotion from dataset, default intensity 0.7)
+        emotions = [{"emotion": emotion, "intensity": 0.7}]
         
         # Format prompt
-        prompt = format_prompt(journal_entry, data_type)
-        full_text = prompt + summary + " </s>"
+        prompt = format_prompt(journal_entry, emotions)
+        full_text = prompt + response + " </s>"
         
         # Tokenize
         tokenized = tokenizer(
@@ -220,7 +215,7 @@ def preprocess_data(data: List[Dict], tokenizer, config: Dict) -> Dataset:
         
         prompt_len = len(prompt_tokenized["input_ids"])
         
-        # Create labels (only for the summary part, -100 for prompt)
+        # Create labels (only for the response part, -100 for prompt)
         labels = [-100] * prompt_len + tokenized["input_ids"][prompt_len:]
         
         # Ensure same length
@@ -313,20 +308,15 @@ def train_model(config: Dict):
     
     # Load data
     print("\n" + "="*60)
-    print("🧠 Mental Health Summary Model Training")
+    print("🧠 Mental Health Empathetic Response Model Training")
     print("="*60)
     
-    empathetic_data = load_empathetic_dialogues(DATA_DIR)
-    psych_data = load_psychological_summary_dataset(DATA_DIR)
+    all_data = load_empathetic_dialogues(DATA_DIR)
     
-    if not empathetic_data and not psych_data:
-        raise ValueError("No training data found! Please download datasets first.")
+    if not all_data:
+        raise ValueError("No training data found!")
     
-    # Combine datasets
-    all_data = empathetic_data + psych_data
-    print(f"\n📊 Total training samples: {len(all_data)}")
-    print(f"   - Empathetic dialogues: {len(empathetic_data)}")
-    print(f"   - Psychological summaries: {len(psych_data)}")
+    print(f"\n📊 Total samples: {len(all_data)}")
     
     # Setup model and tokenizer
     model, tokenizer = setup_model_and_tokenizer(config)
@@ -334,21 +324,31 @@ def train_model(config: Dict):
     # Preprocess data
     dataset = preprocess_data(all_data, tokenizer, config)
     
-    # Split dataset
-    train_test_split = dataset.train_test_split(
-        test_size=1 - config["data"]["train_split"],
-        seed=seed
-    )
-    train_dataset = train_test_split["train"]
+    # Split dataset - preserve original train/val split if available
+    train_data = [d for d in all_data if d.get('split') == 'train']
+    val_data = [d for d in all_data if d.get('split') == 'val']
     
-    # Further split test into val and test
-    val_test_size = config["data"]["test_split"] / (config["data"]["val_split"] + config["data"]["test_split"])
-    val_test_split = train_test_split["test"].train_test_split(
-        test_size=val_test_size,
-        seed=seed
-    )
-    val_dataset = val_test_split["train"]
-    test_dataset = val_test_split["test"]
+    if not val_data:
+        # If no explicit val split, create one
+        train_test_split = dataset.train_test_split(
+            test_size=1 - config["data"]["train_split"],
+            seed=seed
+        )
+        train_dataset = train_test_split["train"]
+        
+        # Further split test into val and test
+        val_test_size = config["data"]["test_split"] / (config["data"]["val_split"] + config["data"]["test_split"])
+        val_test_split = train_test_split["test"].train_test_split(
+            test_size=val_test_size,
+            seed=seed
+        )
+        val_dataset = val_test_split["train"]
+        test_dataset = val_test_split["test"]
+    else:
+        # Use original splits
+        train_dataset = preprocess_data(train_data, tokenizer, config)
+        val_dataset = preprocess_data(val_data, tokenizer, config)
+        test_dataset = val_dataset  # Use val as test if no separate test set
     
     print(f"\n📊 Dataset splits:")
     print(f"   - Train: {len(train_dataset)}")
@@ -441,4 +441,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

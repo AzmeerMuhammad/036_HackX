@@ -12,7 +12,7 @@
     "target_modules": ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
   },
   "training": {
-    "output_dir": "models/mental_health_summary_model",
+    "output_dir": "models/mental_health_empathetic_model",
     "num_train_epochs": 3,
     "per_device_train_batch_size": 4,
     "per_device_eval_batch_size": 4,
@@ -38,12 +38,11 @@
   },
   "data": {
     "max_input_length": 1024,
-    "max_output_length": 256,
+    "max_output_length": 512,
     "train_split": 0.9,
     "val_split": 0.05,
     "test_split": 0.05,
-    "empathetic_dialogues_path": "data/empatheticdialogues/empatheticdialogues",
-    "psychological_summary_dataset_path": "data/psychological_summary"
+    "empathetic_dialogues_path": "data/empatheticdialogues/empatheticdialogues"
   },
   "generation": {
     "max_new_tokens": 256,
@@ -53,7 +52,8 @@
     "num_beams": 4,
     "length_penalty": 1.2,
     "early_stopping": true,
-    "do_sample": true
+    "do_sample": true,
+    "repetition_penalty": 1.1
   },
   "seed": 42
 }
