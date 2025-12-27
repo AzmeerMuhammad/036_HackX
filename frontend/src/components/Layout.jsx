@@ -1,12 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { authAPI } from '../api/auth'
 import { motion } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const Layout = ({ children }) => {
   const { user, logout, setUser } = useAuth()
   const navigate = useNavigate()
   const [isAnonymous, setIsAnonymous] = useState(user?.is_anonymous_mode ?? true)
+
+  // Sync isAnonymous state with user object when it changes
+  useEffect(() => {
+    if (user?.is_anonymous_mode !== undefined) {
+      setIsAnonymous(user.is_anonymous_mode)
+    }
+  }, [user?.is_anonymous_mode])
 
   const handleLogout = () => {
     logout()
@@ -15,15 +23,27 @@ const Layout = ({ children }) => {
 
   const toggleAnonymousMode = async () => {
     const newAnonymousMode = !isAnonymous
+    console.log('Toggling anonymous mode from', isAnonymous, 'to', newAnonymousMode)
     setIsAnonymous(newAnonymousMode)
 
-    // Update user object in context and localStorage
-    const updatedUser = { ...user, is_anonymous_mode: newAnonymousMode }
-    setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
+    try {
+      // Update backend
+      console.log('Sending update to backend:', { is_anonymous_mode: newAnonymousMode })
+      const response = await authAPI.updateMe({ is_anonymous_mode: newAnonymousMode })
+      const updatedUser = response.data
+      console.log('Backend response:', updatedUser)
+      console.log('Updated is_anonymous_mode:', updatedUser.is_anonymous_mode)
 
-    // TODO: Make API call to update backend when endpoint is ready
-    // await api.patch('/auth/me/', { is_anonymous_mode: newAnonymousMode })
+      // Update context and localStorage with backend response
+      setUser(updatedUser)
+      localStorage.setItem('user', JSON.stringify(updatedUser))
+      console.log('✓ Anonymous mode updated successfully')
+    } catch (error) {
+      console.error('Failed to update anonymous mode:', error)
+      console.error('Error details:', error.response?.data)
+      // Revert on error
+      setIsAnonymous(!newAnonymousMode)
+    }
   }
 
   // Check if user is a professional

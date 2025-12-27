@@ -58,9 +58,25 @@ def login_view(request):
     )
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([permissions.IsAuthenticated])
 def me_view(request):
-    """Get current user info."""
-    return Response(UserSerializer(request.user).data)
+    """Get or update current user info."""
+    if request.method == 'GET':
+        return Response(UserSerializer(request.user).data)
+
+    elif request.method == 'PATCH':
+        # Allow updating specific fields
+        user = request.user
+
+        # Update is_anonymous_mode if provided
+        if 'is_anonymous_mode' in request.data:
+            user.is_anonymous_mode = request.data['is_anonymous_mode']
+
+        # Update display_name if provided
+        if 'display_name' in request.data:
+            user.display_name = request.data['display_name']
+
+        user.save()
+        return Response(UserSerializer(user).data)
 
