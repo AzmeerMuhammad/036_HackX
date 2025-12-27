@@ -73,6 +73,20 @@ def me_view(request):
         if 'display_name' in request.data:
             user.display_name = request.data['display_name']
 
+        # Update email if provided
+        if 'email' in request.data:
+            user.email = request.data['email']
+
+        # Update password if provided
+        if 'password' in request.data:
+            password = request.data['password']
+            if len(password) < 8:
+                return Response(
+                    {'error': 'Password must be at least 8 characters'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            user.set_password(password)
+
         user.save()
         return Response(UserSerializer(user).data)
 
