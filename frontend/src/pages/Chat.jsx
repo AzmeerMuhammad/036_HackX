@@ -74,12 +74,12 @@ const Chat = () => {
           className="mb-6"
         >
           <div className="flex items-center gap-3 mb-2">
-            <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#F15A2A' }}>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <h1 className="text-4xl font-bold gradient-text">Chat Support</h1>
+            <h1 className="text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>Chat Support</h1>
           </div>
-          <p className="text-gray-600">Talk to our empathetic AI chatbot anytime</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Talk to our empathetic AI chatbot anytime</p>
         </motion.div>
 
         {/* Disclaimer */}
@@ -93,7 +93,7 @@ const Chat = () => {
             <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            <p className="text-sm text-yellow-900">
+            <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#78350F' }}>
               <strong>Important:</strong> This chatbot provides emotional support and information.
               It does NOT provide medical advice, diagnosis, or therapy.
               If you're in crisis, please contact emergency services immediately.
@@ -127,12 +127,12 @@ const Chat = () => {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="mb-4">
-                  <svg className="w-20 h-20 text-purple-600 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-20 h-20 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#F15A2A' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">Welcome to SafeSpace Chat</h3>
-                <p className="text-gray-600 max-w-md">
+                <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Welcome to SafeSpace Chat</h3>
+                <p className="max-w-md" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   Start a conversation by typing a message below. I'm here to listen and support you.
                 </p>
               </div>
@@ -150,8 +150,9 @@ const Chat = () => {
                     <div className={`flex items-start space-x-2 max-w-[75%] ${message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
                       {/* Avatar */}
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                        message.sender === 'user' ? 'bg-gradient-primary text-white' : 'bg-gray-300 text-gray-700'
-                      }`}>
+                        message.sender === 'user' ? 'text-white' : 'bg-gray-300 text-gray-700'
+                      }`}
+                      style={message.sender === 'user' ? { background: '#F15A2A' } : {}}>
                         {message.sender === 'user' ? (
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -167,14 +168,15 @@ const Chat = () => {
                       <div
                         className={`px-4 py-3 rounded-2xl shadow-sm ${
                           message.sender === 'user'
-                            ? 'bg-gradient-primary text-white rounded-tr-sm'
-                            : 'bg-white border-2 border-gray-200 text-gray-900 rounded-tl-sm'
+                            ? 'text-white rounded-tr-sm'
+                            : 'bg-white border-2 border-gray-200 rounded-tl-sm'
                         }`}
+                        style={message.sender === 'user' ? { background: '#F15A2A', fontFamily: "'Inter', sans-serif" } : { fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
                       >
-                        <div className="text-xs opacity-75 mb-1 font-medium">
+                        <div className="text-xs opacity-75 mb-1 font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
                           {message.sender === 'user' ? 'You' : 'Support Bot'}
                         </div>
-                        <div className="text-sm leading-relaxed">{message.content_encrypted}</div>
+                        <div className="text-sm leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{message.content_encrypted}</div>
                       </div>
                     </div>
                   </motion.div>
@@ -218,7 +220,8 @@ const Chat = () => {
                 whileTap={{ scale: 0.95 }}
                 type="submit"
                 disabled={loading || !session || !input.trim()}
-                className="px-6 py-3 btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                className="px-6 py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 rounded-lg"
+                style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
               >
                 {loading ? (
                   <>
@@ -241,7 +244,8 @@ const Chat = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 text-center text-sm text-gray-600"
+          className="mt-6 text-center text-sm"
+          style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
         >
           💡 Tip: Be open and honest. The AI is here to help you work through your thoughts and feelings.
         </motion.div>

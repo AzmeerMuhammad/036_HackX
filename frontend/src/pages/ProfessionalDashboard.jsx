@@ -277,12 +277,12 @@ const ProfessionalDashboard = () => {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-10 h-10" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h1 className="text-4xl font-bold gradient-text">Professional Dashboard</h1>
+            <h1 className="text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>Professional Dashboard</h1>
           </div>
-          <p className="text-gray-600">Manage your patients, availability, and escalations</p>
+          <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Manage your patients, availability, and escalations</p>
         </motion.div>
 
         {/* Quick Access Tiles */}
@@ -292,7 +292,7 @@ const ProfessionalDashboard = () => {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Access</h2>
+          <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Quick Access</h2>
           <div className="grid md:grid-cols-2 gap-6">
             <motion.div
               whileHover={{ y: -8, scale: 1.02 }}
@@ -300,17 +300,17 @@ const ProfessionalDashboard = () => {
               onClick={() => setShowPatientHistoryModal(true)}
               className="card-3d p-8 cursor-pointer group relative overflow-hidden"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: 'rgba(241, 90, 42, 0.05)' }} />
               <div className="relative z-10">
-                <div className="mb-6 text-purple-600">
+                <div className="mb-6" style={{ color: '#F15A2A' }}>
                   <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-3">See Patient History</h3>
-                <p className="text-gray-600 text-lg">View detailed journal histories and AI insights from patients who have shared their data with you</p>
+                <h3 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>See Patient History</h3>
+                <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>View detailed journal histories and AI insights from patients who have shared their data with you</p>
               </div>
-              <div className="absolute bottom-4 right-4 text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#F15A2A' }}>
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
@@ -330,9 +330,13 @@ const ProfessionalDashboard = () => {
                 whileTap={{ scale: 0.98 }}
                 className={`flex items-center gap-2 px-6 py-3 font-medium transition-all rounded-t-lg ${
                   activeTab === tab.id
-                    ? 'bg-purple-100 text-purple-700 border-b-2 border-purple-600'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'border-b-2'
+                    : 'hover:bg-gray-50'
                 }`}
+                style={activeTab === tab.id
+                  ? { background: 'rgba(241, 90, 42, 0.05)', color: '#F15A2A', borderColor: '#F15A2A', fontFamily: "'Inter', sans-serif" }
+                  : { color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }
+                }
               >
                 {tab.icon}
                 <span>{tab.label}</span>
@@ -354,8 +358,8 @@ const ProfessionalDashboard = () => {
             >
               {/* Patients List */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                   <span>Patients Sharing History</span>
@@ -380,8 +384,8 @@ const ProfessionalDashboard = () => {
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h3 className="font-semibold text-gray-900 text-lg">{patient.name}</h3>
-                            <p className="text-sm text-gray-600">{patient.email}</p>
+                            <h3 className="font-semibold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{patient.name}</h3>
+                            <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{patient.email}</p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             patient.riskLevel === 'low' ? 'bg-green-100 text-green-800' :
@@ -393,12 +397,12 @@ const ProfessionalDashboard = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                           <div>
-                            <span className="text-gray-600">Shared Since:</span>
-                            <p className="font-medium">{new Date(patient.sharedSince).toLocaleDateString()}</p>
+                            <span style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Shared Since:</span>
+                            <p className="font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>{new Date(patient.sharedSince).toLocaleDateString()}</p>
                           </div>
                           <div>
-                            <span className="text-gray-600">Entries:</span>
-                            <p className="font-medium">{patient.entriesCount}</p>
+                            <span style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Entries:</span>
+                            <p className="font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>{patient.entriesCount}</p>
                           </div>
                         </div>
                       </motion.div>
@@ -413,13 +417,14 @@ const ProfessionalDashboard = () => {
                   <div className="space-y-4">
                     <div className="card-3d p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-semibold text-gray-900">{selectedPatient.name}</h2>
+                        <h2 className="text-2xl font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{selectedPatient.name}</h2>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleLoadAISummary(selectedPatient.id)}
                           disabled={loadingSummary}
-                          className="btn-primary px-4 py-2 flex items-center gap-2"
+                          className="px-4 py-2 flex items-center gap-2 rounded-xl font-medium transition-all"
+                          style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -430,13 +435,13 @@ const ProfessionalDashboard = () => {
 
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-purple-50 rounded-lg p-3">
-                            <p className="text-sm text-gray-600">Total Entries</p>
-                            <p className="text-2xl font-bold text-purple-700">{selectedPatient.entriesCount}</p>
+                          <div className="rounded-lg p-3" style={{ background: 'rgba(241, 90, 42, 0.05)' }}>
+                            <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Total Entries</p>
+                            <p className="text-2xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{selectedPatient.entriesCount}</p>
                           </div>
-                          <div className="bg-blue-50 rounded-lg p-3">
-                            <p className="text-sm text-gray-600">Risk Level</p>
-                            <p className="text-2xl font-bold text-blue-700 capitalize">{selectedPatient.riskLevel}</p>
+                          <div className="rounded-lg p-3" style={{ background: 'rgba(241, 90, 42, 0.05)' }}>
+                            <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Risk Level</p>
+                            <p className="text-2xl font-bold capitalize" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{selectedPatient.riskLevel}</p>
                           </div>
                         </div>
                       </div>
@@ -449,8 +454,8 @@ const ProfessionalDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="card-3d p-6 space-y-4"
                       >
-                        <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                          <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <h3 className="text-xl font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                          <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
                           AI-Generated Summary
@@ -458,12 +463,12 @@ const ProfessionalDashboard = () => {
 
                         <div className="space-y-4">
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-2">Overview</h4>
-                            <p className="text-gray-700">{aiSummary.overview}</p>
+                            <h4 className="font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Overview</h4>
+                            <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{aiSummary.overview}</p>
                           </div>
 
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-2">Key Themes</h4>
+                            <h4 className="font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Key Themes</h4>
                             <div className="flex flex-wrap gap-2">
                               {aiSummary.keyThemes.map((theme, idx) => (
                                 <span key={idx} className="badge badge-primary">{theme}</span>
@@ -472,8 +477,8 @@ const ProfessionalDashboard = () => {
                           </div>
 
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-2">Risk Indicators</h4>
-                            <ul className="list-disc list-inside text-gray-700 space-y-1">
+                            <h4 className="font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Risk Indicators</h4>
+                            <ul className="list-disc list-inside space-y-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                               {aiSummary.riskIndicators.map((risk, idx) => (
                                 <li key={idx}>{risk}</li>
                               ))}
@@ -481,8 +486,8 @@ const ProfessionalDashboard = () => {
                           </div>
 
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-2">Recommendations</h4>
-                            <ul className="list-disc list-inside text-gray-700 space-y-1">
+                            <h4 className="font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Recommendations</h4>
+                            <ul className="list-disc list-inside space-y-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                               {aiSummary.recommendations.map((rec, idx) => (
                                 <li key={idx}>{rec}</li>
                               ))}
@@ -490,23 +495,23 @@ const ProfessionalDashboard = () => {
                           </div>
 
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-2">Recent Entries</h4>
+                            <h4 className="font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Recent Entries</h4>
                             <div className="space-y-2">
                               {aiSummary.recentEntries.map((entry, idx) => (
                                 <div key={idx} className="bg-gray-50 rounded-lg p-3">
                                   <div className="flex justify-between items-start mb-1">
-                                    <span className="text-sm font-medium text-gray-900">
+                                    <span className="text-sm font-medium" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                                       {new Date(entry.date).toLocaleDateString()}
                                     </span>
                                     <span className={`text-xs font-medium ${
                                       entry.sentiment > 0.5 ? 'text-green-600' :
                                       entry.sentiment > 0.3 ? 'text-yellow-600' :
                                       'text-orange-600'
-                                    }`}>
+                                    }`} style={{ fontFamily: "'Inter', sans-serif" }}>
                                       Sentiment: {(entry.sentiment * 100).toFixed(0)}%
                                     </span>
                                   </div>
-                                  <p className="text-sm text-gray-700">{entry.summary}</p>
+                                  <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{entry.summary}</p>
                                 </div>
                               ))}
                             </div>
@@ -538,8 +543,8 @@ const ProfessionalDashboard = () => {
             >
               {/* Profile Information */}
               <div className="card-3d p-6">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   Professional Profile
@@ -601,8 +606,8 @@ const ProfessionalDashboard = () => {
 
               {/* Weekly Availability */}
               <div className="card-3d p-6">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Weekly Availability
@@ -620,9 +625,10 @@ const ProfessionalDashboard = () => {
                               ...availability,
                               [day]: {...availability[day], available: e.target.checked}
                             })}
-                            className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
+                            className="w-5 h-5 rounded"
+                            style={{ accentColor: '#F15A2A' }}
                           />
-                          <span className="font-medium text-gray-900 capitalize">{day}</span>
+                          <span className="font-medium capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{day}</span>
                         </div>
 
                         {availability[day].available && (
@@ -661,8 +667,8 @@ const ProfessionalDashboard = () => {
 
               {/* Location & Contact */}
               <div className="card-3d p-6">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -681,7 +687,8 @@ const ProfessionalDashboard = () => {
                             value={type}
                             checked={location.type === type}
                             onChange={(e) => setLocation({...location, type: e.target.value})}
-                            className="w-4 h-4 text-purple-600"
+                            className="w-4 h-4"
+                            style={{ accentColor: '#F15A2A' }}
                           />
                           <span className="capitalize">{type.replace('-', ' ')}</span>
                         </label>
@@ -765,7 +772,8 @@ const ProfessionalDashboard = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSaveProfile}
-                  className="btn-primary px-8 py-3"
+                  className="px-8 py-3 rounded-xl font-medium transition-all"
+                  style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                 >
                   Save Profile Information
                 </motion.button>
@@ -773,7 +781,8 @@ const ProfessionalDashboard = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSaveAvailability}
-                  className="px-8 py-3 bg-white border-2 border-gray-300 text-gray-800 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  className="px-8 py-3 bg-white rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                  style={{ border: '2px solid rgba(241, 90, 42, 0.2)', color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }}
                 >
                   Save Availability
                 </motion.button>
@@ -792,8 +801,8 @@ const ProfessionalDashboard = () => {
             >
               {/* Escalations List */}
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   Pending Escalations
@@ -898,7 +907,8 @@ const ProfessionalDashboard = () => {
                             disabled={submitting}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className="flex-1 btn-primary py-3 disabled:opacity-50"
+                            className="flex-1 py-3 disabled:opacity-50 rounded-xl font-medium transition-all"
+                            style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                           >
                             {submitting ? 'Submitting...' : 'Submit Verdict'}
                           </motion.button>
@@ -911,7 +921,8 @@ const ProfessionalDashboard = () => {
                               setVerdict('')
                               setNotes('')
                             }}
-                            className="px-6 py-3 bg-white border-2 border-gray-300 text-gray-800 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                            className="px-6 py-3 bg-white rounded-xl hover:bg-gray-50 transition-colors font-medium"
+                            style={{ border: '2px solid rgba(241, 90, 42, 0.2)', color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }}
                           >
                             Close
                           </motion.button>
@@ -955,7 +966,7 @@ const ProfessionalDashboard = () => {
                 className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden"
               >
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+                <div className="p-6 text-white" style={{ background: '#F15A2A' }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -982,7 +993,7 @@ const ProfessionalDashboard = () => {
                 <div className="grid lg:grid-cols-2 gap-6 p-6 max-h-[calc(90vh-120px)] overflow-y-auto">
                   {/* Patient List */}
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Patients Sharing History</h3>
+                    <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Patients Sharing History</h3>
                     {patients.length === 0 ? (
                       <div className="card-3d p-8 text-center">
                         <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -998,9 +1009,13 @@ const ProfessionalDashboard = () => {
                             whileHover={{ x: 4 }}
                             className={`p-4 rounded-lg cursor-pointer transition-all ${
                               modalSelectedPatient?.id === patient.id
-                                ? 'bg-purple-100 border-2 border-purple-500'
+                                ? 'border-2'
                                 : 'bg-gray-50 border-2 border-transparent hover:border-gray-300'
                             }`}
+                            style={modalSelectedPatient?.id === patient.id
+                              ? { background: 'rgba(241, 90, 42, 0.05)', borderColor: '#F15A2A' }
+                              : {}
+                            }
                             onClick={() => {
                               setModalSelectedPatient(patient)
                               setModalAiSummary(null)
@@ -1008,8 +1023,8 @@ const ProfessionalDashboard = () => {
                           >
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <h4 className="font-semibold text-gray-900">{patient.name}</h4>
-                                <p className="text-sm text-gray-600">{patient.email}</p>
+                                <h4 className="font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{patient.name}</h4>
+                                <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{patient.email}</p>
                               </div>
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 patient.riskLevel === 'low' ? 'bg-green-100 text-green-800' :
@@ -1035,13 +1050,14 @@ const ProfessionalDashboard = () => {
                       <div className="space-y-4">
                         <div className="bg-gray-50 rounded-lg p-4">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-xl font-semibold text-gray-900">{modalSelectedPatient.name}</h3>
+                            <h3 className="text-xl font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{modalSelectedPatient.name}</h3>
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleModalLoadAISummary(modalSelectedPatient)}
                               disabled={modalLoadingSummary}
-                              className="btn-primary px-4 py-2 flex items-center gap-2 text-sm"
+                              className="px-4 py-2 flex items-center gap-2 text-sm rounded-xl font-medium transition-all"
+                              style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1052,16 +1068,16 @@ const ProfessionalDashboard = () => {
 
                           <div className="grid grid-cols-3 gap-3">
                             <div className="bg-white rounded p-3 text-center">
-                              <p className="text-xs text-gray-600">Entries</p>
-                              <p className="text-lg font-bold text-purple-700">{modalSelectedPatient.entriesCount}</p>
+                              <p className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Entries</p>
+                              <p className="text-lg font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{modalSelectedPatient.entriesCount}</p>
                             </div>
                             <div className="bg-white rounded p-3 text-center">
-                              <p className="text-xs text-gray-600">Risk Level</p>
-                              <p className="text-lg font-bold text-blue-700 capitalize">{modalSelectedPatient.riskLevel}</p>
+                              <p className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Risk Level</p>
+                              <p className="text-lg font-bold capitalize" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{modalSelectedPatient.riskLevel}</p>
                             </div>
                             <div className="bg-white rounded p-3 text-center">
-                              <p className="text-xs text-gray-600">Sharing Since</p>
-                              <p className="text-xs font-medium text-gray-700 mt-1">{new Date(modalSelectedPatient.sharedSince).toLocaleDateString()}</p>
+                              <p className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Sharing Since</p>
+                              <p className="text-xs font-medium mt-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{new Date(modalSelectedPatient.sharedSince).toLocaleDateString()}</p>
                             </div>
                           </div>
                         </div>
@@ -1071,10 +1087,11 @@ const ProfessionalDashboard = () => {
                           <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-white rounded-lg border-2 border-purple-200 p-4 space-y-4 max-h-[600px] overflow-y-auto"
+                            className="bg-white rounded-lg p-4 space-y-4 max-h-[600px] overflow-y-auto"
+                            style={{ border: '2px solid rgba(241, 90, 42, 0.2)' }}
                           >
-                            <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <h4 className="text-lg font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                              <svg className="w-5 h-5" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                               </svg>
                               AI-Generated Summary
@@ -1082,12 +1099,12 @@ const ProfessionalDashboard = () => {
 
                             <div className="space-y-3">
                               <div>
-                                <h5 className="font-semibold text-gray-900 text-sm mb-1">Overview</h5>
-                                <p className="text-gray-700 text-sm">{modalAiSummary.overview}</p>
+                                <h5 className="font-semibold text-sm mb-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Overview</h5>
+                                <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{modalAiSummary.overview}</p>
                               </div>
 
                               <div>
-                                <h5 className="font-semibold text-gray-900 text-sm mb-2">Key Themes</h5>
+                                <h5 className="font-semibold text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Key Themes</h5>
                                 <div className="flex flex-wrap gap-2">
                                   {modalAiSummary.keyThemes.map((theme, idx) => (
                                     <span key={idx} className="badge badge-primary text-xs">{theme}</span>
@@ -1096,8 +1113,8 @@ const ProfessionalDashboard = () => {
                               </div>
 
                               <div>
-                                <h5 className="font-semibold text-gray-900 text-sm mb-1">Risk Indicators</h5>
-                                <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <h5 className="font-semibold text-sm mb-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Risk Indicators</h5>
+                                <ul className="list-disc list-inside text-sm space-y-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                                   {modalAiSummary.riskIndicators.map((risk, idx) => (
                                     <li key={idx} className={risk.includes('HIGH RISK') ? 'text-red-600 font-semibold' : ''}>{risk}</li>
                                   ))}
@@ -1105,8 +1122,8 @@ const ProfessionalDashboard = () => {
                               </div>
 
                               <div>
-                                <h5 className="font-semibold text-gray-900 text-sm mb-1">Recommendations</h5>
-                                <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+                                <h5 className="font-semibold text-sm mb-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Recommendations</h5>
+                                <ul className="list-disc list-inside text-sm space-y-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                                   {modalAiSummary.recommendations.map((rec, idx) => (
                                     <li key={idx} className={rec.includes('URGENT') ? 'text-red-600 font-semibold' : ''}>{rec}</li>
                                   ))}
@@ -1114,24 +1131,24 @@ const ProfessionalDashboard = () => {
                               </div>
 
                               <div>
-                                <h5 className="font-semibold text-gray-900 text-sm mb-2">Recent Journal Entries</h5>
+                                <h5 className="font-semibold text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Recent Journal Entries</h5>
                                 <div className="space-y-2">
                                   {modalAiSummary.historyEntries.map((entry, idx) => (
                                     <div key={idx} className="bg-gray-50 rounded p-3 text-sm">
                                       <div className="flex justify-between items-start mb-1">
-                                        <span className="font-medium text-gray-900 text-xs">
+                                        <span className="font-medium text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                                           {new Date(entry.date).toLocaleDateString()}
                                         </span>
                                         <span className={`text-xs font-medium ${
                                           entry.sentiment > 0.5 ? 'text-green-600' :
                                           entry.sentiment > 0.3 ? 'text-yellow-600' :
                                           'text-red-600'
-                                        }`}>
+                                        }`} style={{ fontFamily: "'Inter', sans-serif" }}>
                                           Sentiment: {(entry.sentiment * 100).toFixed(0)}%
                                         </span>
                                       </div>
-                                      <p className="text-xs text-gray-600 mb-1">Mood: {entry.mood}</p>
-                                      <p className="text-xs text-gray-700">{entry.summary}</p>
+                                      <p className="text-xs mb-1" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Mood: {entry.mood}</p>
+                                      <p className="text-xs" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{entry.summary}</p>
                                       {entry.riskFlags && entry.riskFlags.length > 0 && (
                                         <div className="mt-2 flex flex-wrap gap-1">
                                           {entry.riskFlags.map((flag, i) => (

@@ -71,7 +71,7 @@ const Professionals = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#F15A2A' }}></div>
         </div>
       </Layout>
     )
@@ -81,10 +81,11 @@ const Professionals = () => {
     <Layout>
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Verified Professionals</h1>
+          <h1 className="text-3xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Verified Professionals</h1>
           <button
             onClick={() => setShowApply(!showApply)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            className="px-4 py-2 rounded-lg transition-colors"
+            style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
           >
             Apply to Become Professional
           </button>
@@ -96,10 +97,10 @@ const Professionals = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-md p-6 mb-6"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Apply as Professional</h2>
+            <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Apply as Professional</h2>
             <form onSubmit={handleApply} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   Specialization *
                 </label>
                 <input
@@ -112,7 +113,7 @@ const Professionals = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   Availability *
                 </label>
                 <input
@@ -125,7 +126,7 @@ const Professionals = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   City
                 </label>
                 <input
@@ -140,14 +141,16 @@ const Professionals = () => {
                 <button
                   type="submit"
                   disabled={applying}
-                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 rounded-lg disabled:opacity-50 transition-colors"
+                  style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                 >
                   {applying ? 'Submitting...' : 'Submit Application'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowApply(false)}
-                  className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                  className="px-6 py-2 rounded-lg transition-colors"
+                  style={{ background: '#E5E7EB', fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
                 >
                   Cancel
                 </button>
@@ -165,22 +168,23 @@ const Professionals = () => {
               transition={{ delay: idx * 0.1 }}
               className="bg-white rounded-xl shadow-md p-6"
             >
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                 {prof.user.display_name}
               </h3>
-              <p className="text-primary-600 font-medium mb-2">{prof.specialization}</p>
-              {prof.city && <p className="text-sm text-gray-600 mb-2">📍 {prof.city}</p>}
+              <p className="font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>{prof.specialization}</p>
+              {prof.city && <p className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>📍 {prof.city}</p>}
               {prof.availability && (
-                <p className="text-sm text-gray-600 mb-4">⏰ {prof.availability}</p>
+                <p className="text-sm mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>⏰ {prof.availability}</p>
               )}
               {hasConsent(prof.id) ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm text-green-800 text-center">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#10B981' }}>
                   Consent Granted
                 </div>
               ) : (
                 <button
                   onClick={() => handleGrantConsent(prof.id)}
-                  className="w-full py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  className="w-full py-2 rounded-lg transition-colors"
+                  style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                 >
                   Grant Consent
                 </button>
@@ -191,7 +195,7 @@ const Professionals = () => {
 
         {professionals.length === 0 && (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
-            <p className="text-gray-600">No verified professionals available.</p>
+            <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>No verified professionals available.</p>
           </div>
         )}
       </div>

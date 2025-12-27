@@ -1,23 +1,21 @@
-import React from "react";
 import { motion } from "framer-motion";
 
 /**
- * Calming therapy-themed animation component
- * Features: Breathing circle, floating peaceful elements, gentle gradients
+ * Simplified therapy animation with static brain illustration
+ * Features: Smaller orb, minimal animation, clean design
  */
 const TherapyAnimation = () => {
   return (
-    <div className="relative w-[300px] h-[300px] flex items-center justify-center">
-      {/* Main breathing circle - represents mindfulness and calm */}
+    <div className="relative w-[240px] h-[240px] flex items-center justify-center">
+      {/* Main orb - smaller and subtle */}
       <motion.div
         className="absolute w-48 h-48 rounded-full"
         style={{
-          background: "radial-gradient(circle at 30% 30%, rgba(147, 197, 253, 0.6), rgba(196, 181, 253, 0.4), rgba(167, 243, 208, 0.3))",
-          boxShadow: "0 0 60px rgba(147, 197, 253, 0.4), 0 0 120px rgba(196, 181, 253, 0.2)",
+          background: "radial-gradient(circle at 30% 30%, rgba(241, 90, 42, 0.15), rgba(241, 90, 42, 0.08))",
+          boxShadow: "0 0 30px rgba(241, 90, 42, 0.1)",
         }}
         animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.6, 0.8, 0.6],
+          scale: [1, 1.03, 1],
         }}
         transition={{
           duration: 4,
@@ -26,127 +24,86 @@ const TherapyAnimation = () => {
         }}
       />
 
-      {/* Inner glow circle */}
-      <motion.div
-        className="absolute w-32 h-32 rounded-full"
-        style={{
-          background: "radial-gradient(circle, rgba(255, 255, 255, 0.8), rgba(147, 197, 253, 0.4))",
-          boxShadow: "0 0 40px rgba(255, 255, 255, 0.6)",
-        }}
-        animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.7, 1, 0.7],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: 0.5,
-        }}
-      />
-
-      {/* Floating peaceful elements - leaves/petals */}
-      {[0, 1, 2, 3, 4, 5].map((index) => (
-        <motion.div
-          key={index}
-          className="absolute w-3 h-3 rounded-full"
-          style={{
-            background: `rgba(${index % 2 === 0 ? '147, 197, 253' : '167, 243, 208'}, 0.6)`,
-            left: `${50 + Math.cos((index * Math.PI) / 3) * 40}%`,
-            top: `${50 + Math.sin((index * Math.PI) / 3) * 40}%`,
-            boxShadow: "0 0 15px rgba(147, 197, 253, 0.4)",
-          }}
-          animate={{
-            y: [0, -20, 0],
-            x: [0, Math.cos(index) * 10, 0],
-            opacity: [0.4, 0.8, 0.4],
-            scale: [1, 1.2, 1],
-          }}
-          transition={{
-            duration: 3 + index * 0.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: index * 0.3,
-          }}
-        />
-      ))}
-
-      {/* Orbiting calm elements */}
-      {[0, 1, 2].map((index) => (
-        <motion.div
-          key={`orbit-${index}`}
-          className="absolute w-2 h-2 rounded-full"
-          style={{
-            background: "rgba(196, 181, 253, 0.7)",
-            boxShadow: "0 0 10px rgba(196, 181, 253, 0.5)",
-          }}
-          animate={{
-            rotate: 360,
-          }}
-          transition={{
-            duration: 15 + index * 5,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        >
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{
-              position: "absolute",
-              left: `${80 + index * 20}px`,
-              background: "rgba(167, 243, 208, 0.6)",
-              boxShadow: "0 0 8px rgba(167, 243, 208, 0.4)",
-            }}
-          />
-        </motion.div>
-      ))}
-
-      {/* Gentle wave rings */}
-      {[0, 1, 2, 3].map((index) => (
-        <motion.div
-          key={`ring-${index}`}
-          className="absolute rounded-full border-2"
-          style={{
-            width: `${120 + index * 30}px`,
-            height: `${120 + index * 30}px`,
-            borderColor: `rgba(147, 197, 253, ${0.3 - index * 0.06})`,
-          }}
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.5, 0.2, 0.5],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: index * 0.4,
-          }}
-        />
-      ))}
-
-      {/* Center peace symbol - subtle heart pulse */}
-      <motion.div
-        className="absolute text-4xl"
-        style={{
-          filter: "drop-shadow(0 0 10px rgba(147, 197, 253, 0.6))",
-        }}
-        animate={{
-          scale: [1, 1.15, 1],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+      {/* Static Brain Illustration */}
+      <svg
+        className="absolute"
+        width="100"
+        height="100"
+        viewBox="0 0 100 100"
+        fill="none"
       >
-        <span className="text-blue-300/80">✨</span>
-      </motion.div>
+        {/* Brain outline */}
+        <path
+          d="M50 20C58 20 65 23 70 28C75 33 78 40 78 48C78 56 75 63 70 68C65 73 58 76 50 76C42 76 35 73 30 68C25 63 22 56 22 48C22 40 25 33 30 28C35 23 42 20 50 20Z"
+          fill="#F15A2A"
+          fillOpacity="0.15"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
 
-      {/* Ambient background glow */}
+        {/* Brain convolutions - left hemisphere */}
+        <path
+          d="M35 35C35 35 38 32 42 33C46 34 48 38 48 42"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M30 45C30 45 33 42 37 43C41 44 43 48 43 52"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M33 55C33 55 36 52 40 53C44 54 46 58 46 62"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* Brain convolutions - right hemisphere */}
+        <path
+          d="M65 35C65 35 62 32 58 33C54 34 52 38 52 42"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M70 45C70 45 67 42 63 43C59 44 57 48 57 52"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <path
+          d="M67 55C67 55 64 52 60 53C56 54 54 58 54 62"
+          stroke="#F15A2A"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+
+        {/* Center division */}
+        <path
+          d="M50 25 L50 70"
+          stroke="#F15A2A"
+          strokeWidth="1"
+          strokeLinecap="round"
+          strokeDasharray="3 3"
+          opacity="0.4"
+        />
+      </svg>
+
+      {/* Subtle outer glow */}
       <div
-        className="absolute inset-0 rounded-full blur-3xl -z-10"
+        className="absolute inset-0 rounded-full blur-2xl -z-10"
         style={{
-          background: "radial-gradient(circle, rgba(147, 197, 253, 0.2), rgba(196, 181, 253, 0.15), transparent)",
+          background: "radial-gradient(circle, rgba(241, 90, 42, 0.08), transparent 70%)",
         }}
       />
     </div>

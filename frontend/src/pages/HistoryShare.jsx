@@ -62,7 +62,7 @@ const HistoryShare = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#F15A2A' }}></div>
         </div>
       </Layout>
     )
@@ -71,11 +71,11 @@ const HistoryShare = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Share History</h1>
+        <h1 className="text-3xl font-bold mb-6" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Share History</h1>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <p className="text-sm text-blue-800">
-            Your history will be shared with professionals you've granted consent to. 
+        <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(241, 90, 42, 0.05)', border: '1px solid rgba(241, 90, 42, 0.2)' }}>
+          <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
+            Your history will be shared with professionals you've granted consent to.
             History includes journal summaries, themes, risk trends, and chat highlights from the last 7 days.
           </p>
         </div>
@@ -83,7 +83,7 @@ const HistoryShare = () => {
         {consents.length > 0 ? (
           <div className="space-y-6">
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                 Professionals with Consent
               </h2>
               <div className="space-y-3">
@@ -93,10 +93,10 @@ const HistoryShare = () => {
                     className="flex justify-between items-center p-4 bg-gray-50 rounded-lg"
                   >
                     <div>
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                         {consent.professional.user.display_name}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                         {consent.professional.specialization}
                       </div>
                     </div>
@@ -109,29 +109,31 @@ const HistoryShare = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Generate & Download</h2>
-              <p className="text-gray-600 mb-4">
+              <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Generate & Download</h2>
+              <p className="mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                 Generate a branded PDF report of your 7-day history that you can share with professionals.
               </p>
               <div className="flex space-x-4">
                 <button
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 rounded-lg disabled:opacity-50 transition-colors"
+                  style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
                 >
                   {generating ? 'Generating...' : 'Generate History Report'}
                 </button>
                 {snapshotId && (
                   <button
                     onClick={handleDownloadPDF}
-                    className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="px-6 py-2 rounded-lg transition-colors"
+                    style={{ background: '#10B981', color: 'white', fontFamily: "'Inter', sans-serif" }}
                   >
                     Download PDF
                   </button>
                 )}
               </div>
               {snapshotId && (
-                <p className="text-sm text-gray-600 mt-4">
+                <p className="text-sm mt-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
                   History snapshot #{snapshotId} generated successfully.
                 </p>
               )}
@@ -139,12 +141,13 @@ const HistoryShare = () => {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
-            <p className="text-gray-600 mb-4">
+            <p className="mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
               You haven't granted consent to any professionals yet.
             </p>
             <a
               href="/professionals"
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="font-medium"
+              style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}
             >
               Browse Professionals
             </a>
