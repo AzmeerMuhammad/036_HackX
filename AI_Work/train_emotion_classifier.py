@@ -245,21 +245,35 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
     # Training arguments
     training_args = TrainingArguments(
         output_dir=str(MODELS_DIR / "emotion_classifier_checkpoints"),
-        num_train_epochs=5,
-        per_device_train_batch_size=16,
+        
+        # 1. Increase Epochs (we have EarlyStopping, so let it run longer)
+        num_train_epochs=15, 
+        
+        # 2. Learning Rate & Schedule
+        learning_rate=5e-5,            # Slightly higher to escape local minima
+        lr_scheduler_type="cosine",    # Smoother decay than linear
+        warmup_ratio=0.15,              # Better than fixed steps for variable data sizes
+        
+        # 3. Regularization (to help with the exact-match/accuracy)
+        weight_decay=0.1,             # Increased to prevent overfitting to single labels
+        
+        # 4. Batch Size & Hardware
+        per_device_train_batch_size=32,
         per_device_eval_batch_size=16,
-        warmup_steps=500,
-        weight_decay=0.01,
-        logging_dir=str(RESULTS_DIR / "emotion_classifier_logs"),
-        logging_steps=100,
+        fp16=torch.cuda.is_available(),
+        
+        # 5. Evaluation & Strategy
         eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
-        metric_for_best_model="f1",
+        metric_for_best_model="f1_macro", # Focus on balanced performance
         greater_is_better=True,
-        save_total_limit=2,
-        learning_rate=2e-5,
-        fp16=torch.cuda.is_available(),
+        save_total_limit=1,               # Keep only the absolute best to save space
+        
+        # 6. Logging
+        logging_dir=str(RESULTS_DIR / "emotion_classifier_logs"),
+        logging_steps=50,
+        report_to="none",                 # Prevents extra clutter
     )
     
     # Compute metrics function for multi-label
@@ -292,75 +306,87 @@ def train_emotion_classifier(texts, labels, emotion_names, model_name='distilber
         callbacks=[EarlyStoppingCallback(early_stopping_patience=2)]
     )
     
-    # Train
+   # Train
     print("\nStarting training...")
-    train_result = trainer.train()
+    trainer.train()
+
+    # --- NEW: THRESHOLD OPTIMIZATION ON VALIDATION SET ---
+    print("\nStep 1: Finding optimal thresholds on Validation Set...")
+    val_predictions = trainer.predict(val_dataset)
+    val_probs = torch.nn.Sigmoid()(torch.tensor(val_predictions.predictions)).numpy()
     
-    # Evaluate on test set
-    print("\nEvaluating on test set...")
-    test_results = trainer.evaluate(test_dataset)
+    # Find the best thresholds using our helper function
+    optimal_thresholds = find_optimal_thresholds(y_val, val_probs, emotion_names)
+
+    # --- APPLY TO TEST SET ---
+    print("\nStep 2: Evaluating on Test Set with optimized thresholds...")
+    test_predictions = trainer.predict(test_dataset)
+    test_probs = torch.nn.Sigmoid()(torch.tensor(test_predictions.predictions)).numpy()
     
-    # Get predictions for detailed analysis
-    predictions = trainer.predict(test_dataset)
-    sigmoid = torch.nn.Sigmoid()
-    probs = sigmoid(torch.tensor(predictions.predictions))
-    y_pred_binary = (probs > 0.5).float().numpy()
+    # Apply the specific threshold for each column (emotion)
+    y_pred_optimized = (test_probs >= optimal_thresholds).astype(float)
     
+    # Calculate Optimized Metrics
+    opt_accuracy = accuracy_score(y_test, y_pred_optimized)
+    opt_f1_micro = f1_score(y_test, y_pred_optimized, average='micro')
+    opt_f1_macro = f1_score(y_test, y_pred_optimized, average='macro')
+
     # Per-emotion metrics
     print("\n" + "="*60)
-    print("Test Set Results:")
+    print("Optimized Test Set Results:")
     print("="*60)
-    print(f"\nOverall Accuracy: {test_results['eval_accuracy']:.4f}")
-    print(f"F1 Score (Micro): {test_results['eval_f1_micro']:.4f}")
-    print(f"F1 Score (Macro): {test_results['eval_f1_macro']:.4f}")
+    print(f"\nOverall Accuracy (Subset): {opt_accuracy:.4f}")
+    print(f"F1 Score (Micro): {opt_f1_micro:.4f}")
+    print(f"F1 Score (Macro): {opt_f1_macro:.4f}")
     
-    print("\nPer-Emotion Performance:")
-    for i, emotion in enumerate(emotion_names):
-        emotion_f1 = f1_score(y_test[:, i], y_pred_binary[:, i])
-        emotion_precision = np.sum((y_pred_binary[:, i] == 1) & (y_test[:, i] == 1)) / (np.sum(y_pred_binary[:, i] == 1) + 1e-8)
-        emotion_recall = np.sum((y_pred_binary[:, i] == 1) & (y_test[:, i] == 1)) / (np.sum(y_test[:, i] == 1) + 1e-8)
-        print(f"  {emotion}:")
-        print(f"    F1: {emotion_f1:.4f}, Precision: {emotion_precision:.4f}, Recall: {emotion_recall:.4f}")
-    
-    # Save model and tokenizer
+    # Save model and thresholds
     model_save_path = MODELS_DIR / "emotion_classifier"
     model_save_path.mkdir(exist_ok=True)
     
-    print(f"\nSaving model to {model_save_path}...")
     trainer.save_model(str(model_save_path))
     tokenizer.save_pretrained(str(model_save_path))
     
-    # Save emotion names
+    # --- IMPORTANT: Save thresholds for inference ---
     emotion_info = {
         'emotion_names': emotion_names,
-        'num_emotions': num_labels
+        'num_emotions': num_labels,
+        'optimal_thresholds': optimal_thresholds.tolist() # Save these!
     }
-    emotion_info_path = model_save_path / "emotion_info.json"
-    with open(emotion_info_path, 'w') as f:
+    with open(model_save_path / "emotion_info.json", 'w') as f:
         json.dump(emotion_info, f, indent=2)
-    print(f"Saved emotion info to {emotion_info_path}")
     
-    # Save results
     results = {
         'model_name': model_name,
-        'num_emotions': num_labels,
-        'emotion_names': emotion_names,
-        'train_samples': len(X_train),
-        'val_samples': len(X_val),
-        'test_samples': len(X_test),
-        'test_accuracy': float(test_results['eval_accuracy']),
-        'test_f1_micro': float(test_results['eval_f1_micro']),
-        'test_f1_macro': float(test_results['eval_f1_macro']),
-        'training_date': datetime.now().isoformat()
+        'test_accuracy': float(opt_accuracy),
+        'test_f1_micro': float(opt_f1_micro),
+        'test_f1_macro': float(opt_f1_macro),
+        'thresholds': optimal_thresholds.tolist()
     }
-    
-    results_path = RESULTS_DIR / "emotion_classifier_results.json"
-    with open(results_path, 'w') as f:
-        json.dump(results, f, indent=2)
-    print(f"Saved results to {results_path}")
     
     return model, tokenizer, emotion_names, results
 
+def find_optimal_thresholds(labels, probs, emotion_names):
+    """Find the best threshold for each emotion to maximize F1-score"""
+    print("\nOptimizing thresholds for each emotion...")
+    best_thresholds = []
+    
+    for i, emotion in enumerate(emotion_names):
+        best_f1 = 0
+        best_threshold = 0.5
+        
+        # Test 100 different threshold values
+        for threshold in np.linspace(0.01, 0.99, 100):
+            preds = (probs[:, i] >= threshold).astype(int)
+            f1 = f1_score(labels[:, i], preds, zero_division=0)
+            
+            if f1 > best_f1:
+                best_f1 = f1
+                best_threshold = threshold
+        
+        best_thresholds.append(best_threshold)
+        print(f"  {emotion:15} | Best Threshold: {best_threshold:.2f} | F1: {best_f1:.4f}")
+        
+    return np.array(best_thresholds)
 
 def main():
     """Main training pipeline"""
