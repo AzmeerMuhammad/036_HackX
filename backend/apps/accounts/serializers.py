@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User, UserProfile
+from .models import User
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -39,7 +39,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             is_professional=is_professional,
             professional_type=professional_type if is_professional else None
         )
-        UserProfile.objects.create(user=user)
         return user
 
 
