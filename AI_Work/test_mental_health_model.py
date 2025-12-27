@@ -154,7 +154,18 @@ def calculate_rouge_scores(predictions: List[str], references: List[str]) -> Dic
     return avg_scores
 
 def load_test_data(data_dir: Path, max_samples: int = 100) -> List[Dict]:
-    """Load test data from empathetic dialogues"""
+    """Load test data from empathetic dialogues (prefer processed data)"""
+    processed_dir = data_dir / "processed_empathetic_dialogues"
+    test_processed = processed_dir / "test_processed.json"
+    
+    # Try processed data first
+    if test_processed.exists():
+        print(f"📥 Loading processed test data from: {test_processed}")
+        with open(test_processed, 'r', encoding='utf-8') as f:
+            test_data = json.load(f)
+        return test_data[:max_samples]
+    
+    # Fallback to raw data
     test_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "test.csv"
     
     if not test_path.exists():
@@ -164,21 +175,56 @@ def load_test_data(data_dir: Path, max_samples: int = 100) -> List[Dict]:
     if not test_path.exists():
         return []
     
-    print(f"📥 Loading test data from: {test_path}")
+    print(f"📥 Loading raw test data from: {test_path}")
+    print("💡 Run 'python process_empathetic_dialogues.py' first for better data quality.")
+    
     df = pd.read_csv(test_path)
     
+    def clean_text(text):
+        if pd.isna(text) or str(text) == 'nan':
+            return ""
+        text = str(text).strip()
+        text = text.replace('_comma_', ',')
+        text = text.replace('_period_', '.')
+        return text.strip()
+    
     test_data = []
-    for _, row in df.head(max_samples).iterrows():
-        context = str(row.get('context', '')).strip()
-        prompt = str(row.get('prompt', '')).strip()
-        utterance = str(row.get('utterance', '')).strip()
+    seen_convs = set()
+    
+    # Process similar to training script
+    for conv_id, group in df.groupby('conv_id'):
+        if len(test_data) >= max_samples:
+            break
+        if conv_id in seen_convs:
+            continue
         
-        if prompt and context and utterance:
-            test_data.append({
-                "journal_entry": prompt,
-                "emotion": context,
-                "empathetic_response": utterance
-            })
+        group = group.sort_values('utterance_idx')
+        initial = group[group['utterance_idx'] == 1]
+        
+        if len(initial) == 0:
+            continue
+        
+        initial_row = initial.iloc[0]
+        journal_entry = clean_text(initial_row['prompt'])
+        emotion = clean_text(initial_row['context'])
+        initial_speaker = initial_row['speaker_idx']
+        
+        if not journal_entry or not emotion:
+            continue
+        
+        for _, row in group.iterrows():
+            if row['utterance_idx'] == 1:
+                continue
+            if row['speaker_idx'] != initial_speaker:
+                response = clean_text(row['utterance'])
+                if response and len(response) > 10:
+                    test_data.append({
+                        "journal_entry": journal_entry,
+                        "emotion": emotion,
+                        "empathetic_response": response
+                    })
+                    seen_convs.add(conv_id)
+                    break
     
     return test_data
 

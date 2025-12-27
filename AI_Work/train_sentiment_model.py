@@ -141,7 +141,7 @@ def train_model(df, model_name='microsoft/deberta-v3-base'):
         learning_rate=2e-5,               
         lr_scheduler_type="cosine",       
         warmup_ratio=0.1,                 
-        weight_decay=0.05,                
+        weight_decay=0.05,                                          
         
         eval_strategy="epoch",
         save_strategy="epoch",

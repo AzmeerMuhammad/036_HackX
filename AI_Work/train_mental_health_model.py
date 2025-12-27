@@ -16,6 +16,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, List
 import warnings
+import re
 
 from transformers import (
     AutoTokenizer,
@@ -98,64 +99,158 @@ def format_emotions(emotion_label: str, intensity: float = 0.7) -> str:
     
     return f"{emotion_display} (intensity: {intensity_label})"
 
-def load_empathetic_dialogues(data_dir: Path) -> List[Dict]:
-    """Load and format empathetic dialogues dataset"""
+def load_empathetic_dialogues(data_dir: Path, use_processed: bool = True) -> List[Dict]:
+    """Load and format empathetic dialogues dataset
+    
+    Args:
+        data_dir: Base data directory
+        use_processed: If True, use preprocessed data. If False, process raw data.
+    """
+    processed_dir = data_dir / "processed_empathetic_dialogues"
+    
+    # Try to load processed data first
+    if use_processed and processed_dir.exists():
+        train_processed = processed_dir / "train_processed.json"
+        val_processed = processed_dir / "val_processed.json"
+        
+        if train_processed.exists():
+            print(f"📥 Loading processed data from: {processed_dir}")
+            dialogues = []
+            
+            # Load training data
+            with open(train_processed, 'r', encoding='utf-8') as f:
+                train_data = json.load(f)
+                for item in train_data:
+                    dialogues.append({
+                        "journal_entry": item['journal_entry'],
+                        "emotion": item['emotion'],
+                        "empathetic_response": item['empathetic_response'],
+                        "split": "train"
+                    })
+            
+            # Load validation data
+            if val_processed.exists():
+                with open(val_processed, 'r', encoding='utf-8') as f:
+                    val_data = json.load(f)
+                    for item in val_data:
+                        dialogues.append({
+                            "journal_entry": item['journal_entry'],
+                            "emotion": item['emotion'],
+                            "empathetic_response": item['empathetic_response'],
+                            "split": "val"
+                        })
+            
+            train_count = len([d for d in dialogues if d['split'] == 'train'])
+            val_count = len([d for d in dialogues if d['split'] == 'val'])
+            print(f"✓ Loaded {train_count} training samples")
+            print(f"✓ Loaded {val_count} validation samples")
+            return dialogues
+    
+    # Fallback: process raw data on the fly
+    print("⚠️  Processed data not found. Processing raw data...")
+    print("💡 Run 'python process_empathetic_dialogues.py' first for better performance.")
+    
     train_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "train.csv"
     val_path = data_dir / "empatheticdialogues" / "empatheticdialogues" / "valid.csv"
     
     if not train_path.exists():
         raise FileNotFoundError(f"Empathetic dialogues not found at {train_path}")
     
-    print(f"📥 Loading empathetic dialogues from: {train_path}")
+    dialogues = []
+    
+    # Helper function to clean text
+    def clean_text(text):
+        if pd.isna(text) or str(text) == 'nan':
+            return ""
+        text = str(text).strip()
+        text = text.replace('_comma_', ',')
+        text = text.replace('_period_', '.')
+        text = text.replace('_exclamation_', '!')
+        text = text.replace('_question_', '?')
+        return text.strip()
+    
+    # Load and process training data
+    print(f"📥 Loading raw data from: {train_path}")
     train_df = pd.read_csv(train_path)
     
-    val_df = None
+    # Group by conversation and extract first response
+    seen_convs = set()
+    for conv_id, group in train_df.groupby('conv_id'):
+        if conv_id in seen_convs:
+            continue
+        group = group.sort_values('utterance_idx')
+        
+        # Get initial prompt and emotion
+        initial = group[group['utterance_idx'] == 1]
+        if len(initial) == 0:
+            continue
+        
+        initial_row = initial.iloc[0]
+        journal_entry = clean_text(initial_row['prompt'])
+        emotion = clean_text(initial_row['context'])
+        initial_speaker = initial_row['speaker_idx']
+        
+        if not journal_entry or not emotion:
+            continue
+        
+        # Find first response from different speaker
+        for _, row in group.iterrows():
+            if row['utterance_idx'] == 1:
+                continue
+            if row['speaker_idx'] != initial_speaker:
+                response = clean_text(row['utterance'])
+                if response and len(response) > 10:
+                    dialogues.append({
+                        "journal_entry": journal_entry,
+                        "emotion": emotion,
+                        "empathetic_response": response,
+                        "split": "train"
+                    })
+                    seen_convs.add(conv_id)
+                    break
+    
+    # Process validation data
     if val_path.exists():
         print(f"📥 Loading validation set from: {val_path}")
         val_df = pd.read_csv(val_path)
-    
-    dialogues = []
-    
-    # Process training data
-    for _, row in train_df.iterrows():
-        context = str(row.get('context', '')).strip()
-        prompt = str(row.get('prompt', '')).strip()
-        utterance = str(row.get('utterance', '')).strip()
+        seen_convs = set()
         
-        # Use prompt as journal entry, context as emotion
-        journal_entry = prompt if prompt and prompt != 'nan' else ""
-        emotion = context if context and context != 'nan' else ""
-        response = utterance if utterance and utterance != 'nan' else ""
-        
-        if journal_entry and emotion and response:
-            dialogues.append({
-                "journal_entry": journal_entry,
-                "emotion": emotion,
-                "empathetic_response": response,
-                "split": "train"
-            })
-    
-    # Process validation data if available
-    if val_df is not None:
-        for _, row in val_df.iterrows():
-            context = str(row.get('context', '')).strip()
-            prompt = str(row.get('prompt', '')).strip()
-            utterance = str(row.get('utterance', '')).strip()
+        for conv_id, group in val_df.groupby('conv_id'):
+            if conv_id in seen_convs:
+                continue
+            group = group.sort_values('utterance_idx')
             
-            journal_entry = prompt if prompt and prompt != 'nan' else ""
-            emotion = context if context and context != 'nan' else ""
-            response = utterance if utterance and utterance != 'nan' else ""
+            initial = group[group['utterance_idx'] == 1]
+            if len(initial) == 0:
+                continue
             
-            if journal_entry and emotion and response:
-                dialogues.append({
-                    "journal_entry": journal_entry,
-                    "emotion": emotion,
-                    "empathetic_response": response,
-                    "split": "val"
-                })
+            initial_row = initial.iloc[0]
+            journal_entry = clean_text(initial_row['prompt'])
+            emotion = clean_text(initial_row['context'])
+            initial_speaker = initial_row['speaker_idx']
+            
+            if not journal_entry or not emotion:
+                continue
+            
+            for _, row in group.iterrows():
+                if row['utterance_idx'] == 1:
+                    continue
+                if row['speaker_idx'] != initial_speaker:
+                    response = clean_text(row['utterance'])
+                    if response and len(response) > 10:
+                        dialogues.append({
+                            "journal_entry": journal_entry,
+                            "emotion": emotion,
+                            "empathetic_response": response,
+                            "split": "val"
+                        })
+                        seen_convs.add(conv_id)
+                        break
     
-    print(f"✓ Loaded {len([d for d in dialogues if d['split'] == 'train'])} training samples")
-    print(f"✓ Loaded {len([d for d in dialogues if d['split'] == 'val'])} validation samples")
+    train_count = len([d for d in dialogues if d['split'] == 'train'])
+    val_count = len([d for d in dialogues if d['split'] == 'val'])
+    print(f"✓ Loaded {train_count} training samples")
+    print(f"✓ Loaded {val_count} validation samples")
     return dialogues
 
 def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
