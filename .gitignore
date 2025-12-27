@@ -65,3 +65,13 @@ htmlcov/
 coverage.xml
 *.cover
 
+# AI_Work - ML models and data
+AI_Work/data/
+AI_Work/models/
+AI_Work/results/
+AI_Work/__pycache__/
+*.pkl
+*.h5
+*.pt
+*.pth
+aivenv/
