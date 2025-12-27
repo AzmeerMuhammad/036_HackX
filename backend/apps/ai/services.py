@@ -97,7 +97,8 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
     exclamation_count = text.count('!')
     caps_ratio = sum(1 for c in text if c.isupper()) / max(len(text), 1)
     
-    intensity_score = min(1.0, (intensity_count * 0.1 + exclamation_count * 0.05 + caps_ratio * 0.3))
+    # Calculate intensity score (always returns a value between 0.0 and 1.0)
+    intensity_score = min(1.0, max(0.0, (intensity_count * 0.1 + exclamation_count * 0.05 + caps_ratio * 0.3)))
     
     # Key themes detection
     themes = []
@@ -156,9 +157,13 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
         recent_negative_trend
     )
     
+    # Ensure intensity_score is always a valid float
+    intensity_score = float(intensity_score) if intensity_score is not None else 0.0
+    intensity_score = max(0.0, min(1.0, intensity_score))  # Clamp between 0.0 and 1.0
+    
     return {
         'ai_summary': summary,
-        'sentiment_score': round(sentiment_score, 2),
+        'sentiment_score': round(float(sentiment_score), 2),
         'sentiment_label': sentiment_label or 'neutral',
         'intensity_score': round(intensity_score, 2),
         'key_themes': themes[:5],  # Top 5 themes

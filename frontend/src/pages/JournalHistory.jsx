@@ -157,7 +157,7 @@ const JournalHistory = () => {
                   ),
                   render: (value) => (
                     <span className="font-bold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
-                      {value.toFixed(2)}
+                      {value != null && value !== undefined ? value.toFixed(2) : 'NA'}
                     </span>
                   )
                 },

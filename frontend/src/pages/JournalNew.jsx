@@ -420,9 +420,7 @@ const JournalNew = () => {
               <div className="card-3d p-6 text-center">
                 <div className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Intensity Score</div>
                 <div className="text-4xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>
-                  {result.sentiment_score < 0 && result.detected_emotions && result.detected_emotions.length > 0
-                    ? (result.detected_emotions.reduce((sum, e) => sum + e.confidence, 0) / result.detected_emotions.length).toFixed(2)
-                    : 'NA'}
+                  NA
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
                   Emotional intensity
