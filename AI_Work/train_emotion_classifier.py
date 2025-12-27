@@ -37,7 +37,8 @@ MODELS_DIR.mkdir(exist_ok=True)
 RESULTS_DIR = BASE_DIR / "results"
 RESULTS_DIR.mkdir(exist_ok=True)
 
-# Depression emotions to predict
+# Depression emotions to predict (will be auto-detected from data)
+# Standard emotions
 DEPRESSION_EMOTIONS = [
     'sadness',
     'emptiness',
@@ -47,6 +48,13 @@ DEPRESSION_EMOTIONS = [
     'guilt',
     'shame',
     'fear'
+]
+
+# Additional emotions that may be in the dataset
+ADDITIONAL_EMOTIONS = [
+    'worthlessness',
+    'suicide_intent',
+    'brain_dysfunction'
 ]
 
 
@@ -86,7 +94,7 @@ def load_depression_emo_data():
     print("Loading DepressionEmo Data")
     print("="*60)
     
-    # Try prepared data first
+    # Try prepared data first (from prepare_depression_emo.py)
     prepared_path = DATA_DIR / "depression_emo_prepared.csv"
     if prepared_path.exists():
         print(f"\nLoading from: {prepared_path}")
@@ -95,24 +103,30 @@ def load_depression_emo_data():
         print(f"Columns: {df.columns.tolist()}")
         return df
     
-    # Try raw data
+    # Try train split
+    train_path = DATA_DIR / "depression_emo_train.csv"
+    if train_path.exists():
+        print(f"\nLoading from: {train_path}")
+        df = pd.read_csv(train_path)
+        print(f"Shape: {df.shape}")
+        print(f"Columns: {df.columns.tolist()}")
+        return df
+    
+    # Try raw data (fallback)
     depression_emo_dir = DATA_DIR / "DepressionEmo"
     if depression_emo_dir.exists():
-        csv_files = list(depression_emo_dir.glob("*.csv"))
+        csv_files = list(depression_emo_dir.glob("**/*.csv"))
         if csv_files:
-            print(f"\nLoading from: {csv_files[0]}")
+            print(f"\nWarning: Using raw CSV file. Consider running prepare_depression_emo.py first.")
+            print(f"Loading from: {csv_files[0]}")
             df = pd.read_csv(csv_files[0])
             print(f"Shape: {df.shape}")
             print(f"Columns: {df.columns.tolist()}")
-            
-            # Prepare it
-            from data_loaders import prepare_depression_emo_data
-            df = prepare_depression_emo_data(df)
             return df
     
     raise FileNotFoundError(
-        f"DepressionEmo data not found. Please run data_loaders.py first.\n"
-        f"Expected location: {prepared_path} or {depression_emo_dir}"
+        f"DepressionEmo data not found. Please run prepare_depression_emo.py first.\n"
+        f"Expected location: {prepared_path} or {train_path}"
     )
 
 
@@ -128,24 +142,60 @@ def prepare_emotion_labels(df):
     
     texts = df['text'].astype(str).values
     
-    # Get emotion columns
+    # Get emotion columns - check all possible emotions
+    all_possible_emotions = DEPRESSION_EMOTIONS + ADDITIONAL_EMOTIONS
     emotion_labels = []
     available_emotions = []
     
-    for emotion in DEPRESSION_EMOTIONS:
+    # First, try to find emotion columns in the dataframe
+    for emotion in all_possible_emotions:
         if emotion in df.columns:
             labels = df[emotion].values
             # Convert to binary if needed
             if labels.dtype == 'object':
-                labels = (labels.astype(str).str.lower() == 'true').astype(float)
+                labels = (labels.astype(str).str.lower().isin(['true', '1', 'yes'])).astype(float)
             else:
                 labels = labels.astype(float)
-            emotion_labels.append(labels)
-            available_emotions.append(emotion)
-            print(f"  {emotion}: {labels.sum()} positive samples ({labels.sum()/len(labels)*100:.2f}%)")
+            # Only include if there are positive samples
+            if labels.sum() > 0:
+                emotion_labels.append(labels)
+                available_emotions.append(emotion)
+                print(f"  {emotion}: {labels.sum()} positive samples ({labels.sum()/len(labels)*100:.2f}%)")
+    
+    # If no emotions found, try to extract from emotions_list column
+    if not emotion_labels and 'emotions_list' in df.columns:
+        print("\nNo emotion columns found, extracting from emotions_list...")
+        from collections import Counter
+        all_emotions_found = Counter()
+        
+        for emotions_list in df['emotions_list']:
+            if isinstance(emotions_list, str):
+                import ast
+                try:
+                    emotions_list = ast.literal_eval(emotions_list)
+                except:
+                    emotions_list = [emotions_list]
+            if isinstance(emotions_list, list):
+                all_emotions_found.update(emotions_list)
+        
+        print(f"Found emotions in data: {sorted(all_emotions_found.keys())}")
+        
+        # Create binary labels from emotions_list
+        for emotion in sorted(all_emotions_found.keys()):
+            labels = df['emotions_list'].apply(
+                lambda x: 1 if emotion in (x if isinstance(x, list) else []) else 0
+            ).values.astype(float)
+            
+            if labels.sum() > 0:
+                emotion_labels.append(labels)
+                available_emotions.append(emotion)
+                print(f"  {emotion}: {labels.sum()} positive samples ({labels.sum()/len(labels)*100:.2f}%)")
     
     if not emotion_labels:
-        raise ValueError("No emotion columns found in dataframe")
+        raise ValueError(
+            "No emotion columns found in dataframe. "
+            "Please run prepare_depression_emo.py first to prepare the data."
+        )
     
     # Stack into matrix: (n_samples, n_emotions)
     labels_matrix = np.stack(emotion_labels, axis=1)
