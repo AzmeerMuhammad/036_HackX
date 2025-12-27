@@ -23,7 +23,7 @@ MODELS_DIR = BASE_DIR / "models"
 
 def load_model_and_tokenizer(
     model_path: str,
-    base_model: str = "meta-llama/Llama-2-7b-chat-hf"
+    base_model: str = "mistralai/Mistral-7B-Instruct-v0.2"
 ):
     """Load fine-tuned model and tokenizer"""
     model_path = Path(model_path)
@@ -110,20 +110,21 @@ def parse_emotions(emotions_str: str) -> List[Dict]:
     return emotions
 
 def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
-    """Format the prompt for the model with journal entry and emotions"""
+    """Format the prompt for the model with journal entry and emotions (Mistral format)"""
     # Format emotions list
     emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
                              for e in emotions])
     
-    return f"""<s>[INST] <<SYS>>
-You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
-<</SYS>>
+    # Mistral-Instruct format: <s>[INST] {instruction} [/INST]
+    instruction = f"""You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
 
 Journal Entry: {journal_entry}
 
 Identified Emotions: {emotions_str}
 
-Empathetic Response: [/INST]"""
+Empathetic Response:"""
+    
+    return f"<s>[INST] {instruction} [/INST]"
 
 def generate_response(
     model,
@@ -177,12 +178,17 @@ def generate_response(
     # Decode
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
-    # Extract only the response part (after the prompt)
-    if "Empathetic Response:" in generated_text:
+    # Extract only the response part (after [/INST])
+    if "[/INST]" in generated_text:
+        response = generated_text.split("[/INST]")[-1].strip()
+        # Remove any trailing </s> tokens
+        response = response.replace("</s>", "").strip()
+    elif "Empathetic Response:" in generated_text:
         response = generated_text.split("Empathetic Response:")[-1].strip()
     else:
         # Fallback: remove prompt
         response = generated_text.replace(prompt, "").strip()
+        response = response.replace("</s>", "").strip()
     
     return response
 
@@ -190,7 +196,7 @@ def predict_from_input(
     journal_entry: str,
     emotions: List[Dict],
     model_path: str = "models/mental_health_empathetic_model",
-    base_model: str = "meta-llama/Llama-2-7b-chat-hf",
+    base_model: str = "mistralai/Mistral-7B-Instruct-v0.2",
     config_path: str = "config_mental_health.json"
 ) -> str:
     """

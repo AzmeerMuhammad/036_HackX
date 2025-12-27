@@ -254,20 +254,21 @@ def load_empathetic_dialogues(data_dir: Path, use_processed: bool = True) -> Lis
     return dialogues
 
 def format_prompt(journal_entry: str, emotions: List[Dict]) -> str:
-    """Format the prompt for the model with journal entry and emotions"""
+    """Format the prompt for the model with journal entry and emotions (Mistral format)"""
     # Format emotions list
     emotions_str = ", ".join([f"{e['emotion']} ({e.get('intensity', 0.7):.1f})" 
                              for e in emotions])
     
-    return f"""<s>[INST] <<SYS>>
-You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
-<</SYS>>
+    # Mistral-Instruct format: <s>[INST] {instruction} [/INST]
+    instruction = f"""You are a compassionate mental health professional. Generate an empathetic psychological response to the following journal entry, considering the identified emotions and their intensities.
 
 Journal Entry: {journal_entry}
 
 Identified Emotions: {emotions_str}
 
-Empathetic Response: [/INST]"""
+Empathetic Response:"""
+    
+    return f"<s>[INST] {instruction} [/INST]"
 
 def preprocess_data(data: List[Dict], tokenizer, config: Dict) -> Dataset:
     """Preprocess data for training"""
