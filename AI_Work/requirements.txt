@@ -9,8 +9,16 @@ torch>=2.0.0
 transformers>=4.30.0
 accelerate>=0.26.0
 
-# Dataset Download
+# Parameter-Efficient Fine-Tuning (LoRA)
+peft>=0.6.0
+bitsandbytes>=0.41.0
+
+# Dataset Download and Management
 kagglehub>=0.2.0
+datasets>=2.14.0
+
+# HTTP Requests (for data downloading)
+requests>=2.31.0
 
 # Utilities
 tqdm>=4.65.0
