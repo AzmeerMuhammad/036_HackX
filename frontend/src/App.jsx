@@ -1,8 +1,10 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import AuthGuard from './components/AuthGuard'
+import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ProfessionalRegister from './pages/ProfessionalRegister'
 import Home from './pages/Home'
 import JournalNew from './pages/JournalNew'
 import JournalHistory from './pages/JournalHistory'
@@ -17,8 +19,10 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/professional/register" element={<ProfessionalRegister />} />
           <Route path="/home" element={<AuthGuard><Home /></AuthGuard>} />
           <Route path="/journal/new" element={<AuthGuard><JournalNew /></AuthGuard>} />
           <Route path="/journal/history" element={<AuthGuard><JournalHistory /></AuthGuard>} />
@@ -27,7 +31,6 @@ function App() {
           <Route path="/professionals" element={<AuthGuard><Professionals /></AuthGuard>} />
           <Route path="/professional/dashboard" element={<AuthGuard><ProfessionalDashboard /></AuthGuard>} />
           <Route path="/history/share" element={<AuthGuard><HistoryShare /></AuthGuard>} />
-          <Route path="/" element={<Navigate to="/home" replace />} />
         </Routes>
       </Router>
     </AuthProvider>

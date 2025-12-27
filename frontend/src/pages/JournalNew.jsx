@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { journalAPI } from '../api/journal'
@@ -8,11 +8,132 @@ const JournalNew = () => {
   const [text, setText] = useState('')
   const [checkinMood, setCheckinMood] = useState('')
   const [checkinIntensity, setCheckinIntensity] = useState(0.5)
-  const [voiceFile, setVoiceFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [result, setResult] = useState(null)
+  const [isListening, setIsListening] = useState(false)
+  const [voiceSupported, setVoiceSupported] = useState(false)
+  const recognitionRef = useRef(null)
+  const finalTranscriptRef = useRef('') // Store final transcript separately
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Check if browser supports Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setVoiceSupported(true)
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      
+      try {
+        recognitionRef.current = new SpeechRecognition()
+        recognitionRef.current.continuous = true
+        recognitionRef.current.interimResults = true
+        recognitionRef.current.lang = 'en-US' // Can be changed to 'ur-PK' for Urdu
+
+        recognitionRef.current.onresult = (event) => {
+          let interimTranscript = ''
+          let finalTranscript = ''
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' '
+            } else {
+              interimTranscript += transcript
+            }
+          }
+
+          // Update final transcript
+          if (finalTranscript) {
+            finalTranscriptRef.current += finalTranscript
+            setText(finalTranscriptRef.current + interimTranscript)
+          } else if (interimTranscript) {
+            // Show final + interim in real-time
+            setText(finalTranscriptRef.current + interimTranscript)
+          }
+        }
+
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error:', event.error)
+          setIsListening(false)
+          
+          let errorMessage = 'Speech recognition error occurred.'
+          switch (event.error) {
+            case 'no-speech':
+              errorMessage = 'No speech detected. Please speak clearly and try again.'
+              break
+            case 'not-allowed':
+              errorMessage = 'Microphone access denied. Please allow microphone permissions in your browser settings.'
+              break
+            case 'audio-capture':
+              errorMessage = 'No microphone found. Please connect a microphone.'
+              break
+            case 'network':
+              errorMessage = 'Network error. Please check your internet connection.'
+              break
+            case 'aborted':
+              // User stopped manually, don't show error
+              return
+            default:
+              errorMessage = `Speech recognition error: ${event.error}`
+          }
+          setError(errorMessage)
+        }
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false)
+        }
+
+        recognitionRef.current.onstart = () => {
+          setError('')
+        }
+      } catch (err) {
+        console.error('Failed to initialize speech recognition:', err)
+        setVoiceSupported(false)
+        setError('Failed to initialize voice recognition. Please refresh the page.')
+      }
+    } else {
+      setVoiceSupported(false)
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch (e) {
+          // Ignore errors on cleanup
+        }
+      }
+    }
+  }, [])
+
+  const toggleVoiceInput = () => {
+    if (!voiceSupported) {
+      setError('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.')
+      return
+    }
+
+    if (isListening) {
+      try {
+        recognitionRef.current.stop()
+        setIsListening(false)
+      } catch (err) {
+        console.error('Error stopping recognition:', err)
+        setIsListening(false)
+      }
+    } else {
+      setError('')
+      // Reset final transcript when starting new session
+      finalTranscriptRef.current = text
+      try {
+        recognitionRef.current.start()
+        setIsListening(true)
+      } catch (err) {
+        console.error('Error starting recognition:', err)
+        setError('Failed to start voice recognition. Please try again.')
+        setIsListening(false)
+      }
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -24,12 +145,17 @@ const JournalNew = () => {
     setLoading(true)
     setError('')
 
+    // Stop voice recording if active
+    if (isListening) {
+      recognitionRef.current.stop()
+      setIsListening(false)
+    }
+
     try {
       const formData = {
         text,
         checkin_mood: checkinMood,
         checkin_intensity: checkinIntensity,
-        voice_file: voiceFile,
       }
       const response = await journalAPI.create(formData)
       setResult(response.data)
@@ -42,174 +168,545 @@ const JournalNew = () => {
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">New Journal Entry</h1>
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <h1 className="text-4xl font-bold gradient-text">New Journal Entry</h1>
+          </div>
+          <p className="text-gray-600">Express your thoughts and let AI provide insights</p>
+        </motion.div>
 
         {!result ? (
           <motion.form
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
             onSubmit={handleSubmit}
-            className="bg-white rounded-xl shadow-md p-6 space-y-6"
+            className="card-3d p-8 space-y-6"
           >
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{error}</span>
+              </motion.div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                How are you feeling? (Optional)
+              <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>How are you feeling? (Optional)</span>
               </label>
               <input
                 type="text"
                 value={checkinMood}
                 onChange={(e) => setCheckinMood(e.target.value)}
-                placeholder="e.g., anxious, calm, happy"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+                placeholder="e.g., anxious, calm, happy, overwhelmed"
+                className="input-modern"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Intensity: {Math.round(checkinIntensity * 100)}%
+              <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>Intensity: <span className="text-primary-600 font-bold">{Math.round(checkinIntensity * 100)}%</span></span>
               </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={checkinIntensity}
-                onChange={(e) => setCheckinIntensity(parseFloat(e.target.value))}
-                className="w-full"
-              />
+              <div className="relative">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={checkinIntensity}
+                  onChange={(e) => setCheckinIntensity(parseFloat(e.target.value))}
+                  className="w-full h-3 bg-gray-200 rounded-full appearance-none cursor-pointer slider"
+                  style={{
+                    background: `linear-gradient(to right, #667eea ${checkinIntensity * 100}%, #e5e7eb ${checkinIntensity * 100}%)`
+                  }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>Low</span>
+                <span>Medium</span>
+                <span>High</span>
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Journal Entry *
-              </label>
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                rows={10}
-                required
-                placeholder="Write about your thoughts, feelings, or experiences..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-              />
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  <span>Journal Entry <span className="text-red-500">*</span></span>
+                </label>
+
+                {/* Sleek & Amazing Voice Input Button */}
+                {voiceSupported ? (
+                  <motion.button
+                    type="button"
+                    onClick={toggleVoiceInput}
+                    whileHover={{ 
+                      scale: 1.08, 
+                      boxShadow: isListening 
+                        ? "0 0 30px rgba(239, 68, 68, 0.5)" 
+                        : "0 10px 30px rgba(139, 92, 246, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.92 }}
+                    className={`relative overflow-hidden flex items-center gap-3 px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 border-2 ${
+                      isListening
+                        ? 'bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white shadow-2xl shadow-red-500/60 border-red-300'
+                        : 'bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 text-white shadow-xl shadow-purple-500/40 hover:shadow-2xl hover:shadow-purple-500/50 border-purple-300'
+                    }`}
+                  >
+                    {/* Animated shimmer background */}
+                    {!isListening && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                        animate={{
+                          x: ['-200%', '200%'],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatDelay: 1,
+                          ease: "easeInOut"
+                        }}
+                      />
+                    )}
+
+                    {/* Animated pulsing background when listening */}
+                    {isListening && (
+                      <>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-500 to-red-600"
+                          animate={{
+                            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                          style={{
+                            backgroundSize: '200% 200%',
+                          }}
+                        />
+                        {/* Pulsing rings */}
+                        <motion.div
+                          className="absolute inset-0 rounded-2xl border-2 border-white/40"
+                          animate={{
+                            scale: [1, 1.1, 1],
+                            opacity: [0.6, 0.3, 0.6],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      </>
+                    )}
+                    
+                    {/* Content with icon and text */}
+                    <div className="relative z-10 flex items-center gap-3">
+                      {isListening ? (
+                        <>
+                          {/* Animated pulsing microphone icon */}
+                          <motion.div
+                            className="relative"
+                            animate={{ 
+                              scale: [1, 1.15, 1],
+                            }}
+                            transition={{ 
+                              duration: 1, 
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          >
+                            {/* Multiple pulse rings */}
+                            {[0, 0.3, 0.6].map((delay, idx) => (
+                              <motion.div
+                                key={idx}
+                                className="absolute inset-0 rounded-full bg-white/50"
+                                animate={{
+                                  scale: [1, 2, 2],
+                                  opacity: [0.6, 0, 0],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  ease: "easeOut",
+                                  delay: delay
+                                }}
+                              />
+                            ))}
+                            <svg className="w-6 h-6 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                            </svg>
+                          </motion.div>
+                          <span className="font-bold tracking-wide">Stop</span>
+                        </>
+                      ) : (
+                        <>
+                          {/* Elegant microphone icon */}
+                          <motion.div
+                            whileHover={{ 
+                              rotate: [0, -15, 15, -15, 0],
+                              scale: [1, 1.1, 1]
+                            }}
+                            transition={{ duration: 0.6 }}
+                            className="relative"
+                          >
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                            {/* Subtle glow effect */}
+                            <motion.div
+                              className="absolute inset-0 bg-white/20 rounded-full blur-md"
+                              animate={{
+                                opacity: [0.3, 0.6, 0.3],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            />
+                          </motion.div>
+                          <span className="font-bold tracking-wide">Voice</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Top shine effect */}
+                    <motion.div
+                      className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent"
+                      animate={isListening ? {
+                        opacity: [0.3, 0.6, 0.3],
+                      } : {}}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.button>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-500 text-xs border border-gray-200">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Not supported</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={12}
+                  required
+                  placeholder={isListening 
+                    ? "Speak now... Your words will appear here as you speak." 
+                    : "Write about your thoughts, feelings, or experiences... Or click 'Start Voice Input' to speak. This is your safe space."}
+                  className="input-modern resize-none font-serif"
+                  disabled={isListening && !text} // Allow editing while listening if text exists
+                />
+                {isListening && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="absolute top-4 right-4 flex items-center gap-3 bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white px-5 py-2.5 rounded-full text-sm font-bold shadow-2xl shadow-red-500/50 backdrop-blur-md border-2 border-white/30 z-20"
+                  >
+                    {/* Multiple animated pulse rings */}
+                    <div className="absolute inset-0 rounded-full overflow-hidden">
+                      {[0, 0.2, 0.4].map((delay, idx) => (
+                        <motion.div
+                          key={idx}
+                          className="absolute inset-0 rounded-full bg-white/40"
+                          animate={{
+                            scale: [1, 1.6, 1.6],
+                            opacity: [0.6, 0, 0],
+                          }}
+                          transition={{
+                            duration: 1.5,
+                            repeat: Infinity,
+                            ease: "easeOut",
+                            delay: delay
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Pulsing dot */}
+                    <motion.span
+                      animate={{ 
+                        scale: [1, 1.4, 1],
+                        opacity: [1, 0.7, 1]
+                      }}
+                      transition={{ 
+                        duration: 1, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      className="relative z-10 w-3 h-3 bg-white rounded-full shadow-lg"
+                    />
+                    
+                    {/* Text with glow */}
+                    <span className="relative z-10 tracking-wide drop-shadow-lg">
+                      Recording...
+                    </span>
+                    
+                    {/* Shimmer effect */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full"
+                      animate={{
+                        x: ['-100%', '100%'],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </motion.div>
+                )}
+              </div>
+              <div className="flex justify-between items-center text-xs text-gray-500 mt-2">
+                <span>{text.length} characters</span>
+                {isListening && (
+                  <motion.span
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-2 text-red-600 font-semibold"
+                  >
+                    <motion.span
+                      animate={{ 
+                        scale: [1, 1.3, 1],
+                        opacity: [1, 0.6, 1]
+                      }}
+                      transition={{ 
+                        duration: 1, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                      className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-lg"
+                    />
+                    <span className="tracking-wide">Listening... Speak clearly</span>
+                  </motion.span>
+                )}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Voice Recording (Optional)
-              </label>
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={(e) => setVoiceFile(e.target.files[0])}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="w-full btn-primary py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Analyzing...' : 'Submit & Analyze'}
-            </button>
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Analyzing your entry...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Submit & Analyze</span>
+                </>
+              )}
+            </motion.button>
           </motion.form>
         ) : (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl shadow-md p-6 space-y-6"
+            transition={{ duration: 0.4 }}
+            className="space-y-6"
           >
-            <h2 className="text-2xl font-bold text-gray-900">AI Analysis Results</h2>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-gray-900 mb-2">Summary</h3>
-              <p className="text-gray-700">{result.ai_summary}</p>
+            {/* Success Header */}
+            <div className="card-3d p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200">
+              <div className="flex items-center space-x-3">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Entry Saved Successfully!</h2>
+                  <p className="text-gray-600">AI analysis completed</p>
+                </div>
+              </div>
             </div>
 
+            {/* AI Summary */}
+            <div className="card-3d p-6">
+              <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center space-x-2">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>AI Summary</span>
+              </h3>
+              <p className="text-gray-700 leading-relaxed">{result.ai_summary}</p>
+            </div>
+
+            {/* Scores */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600">Sentiment Score</div>
-                <div className="text-2xl font-bold text-primary-600">
+              <div className="card-3d p-6 text-center">
+                <div className="text-sm text-gray-600 mb-2">Sentiment Score</div>
+                <div className={`text-4xl font-bold ${result.sentiment_score >= 0 ? 'text-green-600' : 'text-orange-600'}`}>
                   {result.sentiment_score > 0 ? '+' : ''}{result.sentiment_score.toFixed(2)}
                 </div>
+                <div className="text-xs text-gray-500 mt-2 flex items-center justify-center gap-1">
+                  {result.sentiment_score >= 0 ? (
+                    <>
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Positive</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Needs attention</span>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="text-sm text-gray-600">Intensity Score</div>
-                <div className="text-2xl font-bold text-primary-600">
+              <div className="card-3d p-6 text-center">
+                <div className="text-sm text-gray-600 mb-2">Intensity Score</div>
+                <div className="text-4xl font-bold text-primary-600">
                   {result.intensity_score.toFixed(2)}
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  Emotional intensity
                 </div>
               </div>
             </div>
 
+            {/* Key Themes */}
             {result.key_themes && result.key_themes.length > 0 && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Key Themes</h3>
+              <div className="card-3d p-6">
+                <h3 className="font-bold text-lg text-gray-900 mb-3 flex items-center gap-2">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <span>Key Themes</span>
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {result.key_themes.map((theme, idx) => (
-                    <span
+                    <motion.span
                       key={idx}
-                      className="px-3 py-1 bg-primary-100 text-primary-800 rounded-full text-sm"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: idx * 0.1 }}
+                      className="badge badge-primary text-base px-4 py-2"
                     >
                       {theme}
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
               </div>
             )}
 
+            {/* Risk Flags */}
             {result.risk_flags && Object.values(result.risk_flags).some(v => v) && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h3 className="font-semibold text-yellow-900 mb-2">Risk Flags Detected</h3>
-                <ul className="list-disc list-inside text-yellow-800">
+              <div className="card-3d p-6 bg-yellow-50 border-2 border-yellow-200">
+                <h3 className="font-bold text-lg text-yellow-900 mb-3 flex items-center space-x-2">
+                  <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>Risk Flags Detected</span>
+                </h3>
+                <ul className="list-disc list-inside text-yellow-800 space-y-1">
                   {Object.entries(result.risk_flags)
                     .filter(([_, value]) => value)
                     .map(([key, _]) => (
-                      <li key={key}>{key.replace('_', ' ')}</li>
+                      <li key={key} className="capitalize">{key.replace('_', ' ')}</li>
                     ))}
                 </ul>
               </div>
             )}
 
+            {/* Suggest Chat */}
             {result.suggest_start_chat && (
-              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-                <p className="text-primary-900 mb-4">
-                  Based on your entry, we recommend starting a chat session for additional support.
-                </p>
-                <button
-                  onClick={() => navigate('/chat')}
-                  className="w-full py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
-                >
-                  Start Chat
-                </button>
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="card-3d p-6 bg-gradient-to-r from-primary-50 to-indigo-50 border-2 border-primary-200"
+              >
+                <div className="flex items-start space-x-4">
+                  <svg className="w-10 h-10 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-gray-900 mb-4 font-medium">
+                      Based on your entry, we recommend starting a chat session for additional support.
+                    </p>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate('/chat')}
+                      className="btn-primary px-6 py-3"
+                    >
+                      Start Chat Now
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
             )}
 
+            {/* Action Buttons */}
             <div className="flex space-x-4">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setResult(null)
                   setText('')
                   setCheckinMood('')
                   setCheckinIntensity(0.5)
-                  setVoiceFile(null)
                 }}
-                className="flex-1 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                className="flex-1 py-3 bg-white border-2 border-gray-300 text-gray-800 rounded-xl hover:bg-gray-50 transition-colors font-medium shadow-sm flex items-center justify-center gap-2"
               >
-                New Entry
-              </button>
-              <button
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+                <span>New Entry</span>
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/journal/history')}
-                className="flex-1 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                className="flex-1 btn-primary py-3 flex items-center justify-center gap-2"
               >
-                View History
-              </button>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>View History</span>
+              </motion.button>
             </div>
           </motion.div>
         )}
@@ -219,4 +716,3 @@ const JournalNew = () => {
 }
 
 export default JournalNew
-

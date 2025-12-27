@@ -8,7 +8,7 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         model = JournalEntry
         fields = (
             'id', 'checkin_mood', 'checkin_intensity', 'text_encrypted',
-            'voice_file', 'ai_summary', 'sentiment_score', 'intensity_score',
+            'ai_summary', 'sentiment_score', 'intensity_score',
             'key_themes', 'risk_flags', 'suggest_start_chat', 'created_at'
         )
         read_only_fields = (
@@ -19,11 +19,12 @@ class JournalEntrySerializer(serializers.ModelSerializer):
 
 class JournalEntryCreateSerializer(serializers.ModelSerializer):
     text = serializers.CharField(write_only=True)
+    # Note: Voice-to-text is handled in frontend, backend only receives transcribed text
     
     class Meta:
         model = JournalEntry
         fields = (
-            'checkin_mood', 'checkin_intensity', 'text', 'voice_file'
+            'checkin_mood', 'checkin_intensity', 'text'
         )
 
     def create(self, validated_data):

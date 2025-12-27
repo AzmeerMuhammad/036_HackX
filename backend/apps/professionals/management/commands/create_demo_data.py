@@ -5,7 +5,7 @@ Management command to create demo data:
 - Demo users
 """
 from django.core.management.base import BaseCommand
-from apps.accounts.models import User, UserProfile
+from apps.accounts.models import User
 from apps.professionals.models import Professional, ProfessionalSOPDoc
 
 
@@ -33,7 +33,6 @@ class Command(BaseCommand):
             if created:
                 user.set_password(user_data['password'])
                 user.save()
-                UserProfile.objects.create(user=user)
                 self.stdout.write(self.style.SUCCESS(f'Created user: {user.username}'))
         
         # Create verified professionals
@@ -115,8 +114,9 @@ class Command(BaseCommand):
             )
             if created:
                 user.set_password('professional123')
+                user.is_professional = True
+                user.professional_type = 'psychiatrist'  # Default, can be customized
                 user.save()
-                UserProfile.objects.create(user=user)
             
             professional, created = Professional.objects.get_or_create(
                 user=user,

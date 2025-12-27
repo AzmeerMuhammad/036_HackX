@@ -1,13 +1,10 @@
 from django.contrib import admin
-from .models import User, UserProfile
+from .models import User
 
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'display_name', 'email', 'is_anonymous_mode', 'is_staff', 'created_at')
-
-
-@admin.register(UserProfile)
-class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'city', 'created_at')
+    list_display = ('username', 'display_name', 'email', 'is_anonymous_mode', 'is_professional', 'is_staff', 'created_at')
+    list_filter = ('is_professional', 'is_anonymous_mode', 'is_staff', 'professional_type')
+    search_fields = ('username', 'email', 'display_name')
 

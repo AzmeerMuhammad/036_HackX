@@ -8,4 +8,5 @@ class JournalEntryAdmin(admin.ModelAdmin):
     list_filter = ('suggest_start_chat', 'created_at')
     search_fields = ('user__username', 'ai_summary')
     readonly_fields = ('text_encrypted', 'transcription_encrypted', 'created_at')
+    # Note: Voice-to-text is handled in frontend, backend only stores the transcribed text
 
