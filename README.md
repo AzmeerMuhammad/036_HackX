@@ -301,14 +301,7 @@ Before deploying to production:
 
 This project is for demonstration purposes.
 
-## 🤝 Contributing
-
-This is an MVP demonstration. For production use, additional security, testing, and compliance measures would be required.
 
 ## ⚠️ Disclaimer
 
 This platform is for demonstration purposes only. It does not replace professional medical advice, diagnosis, or treatment. If you're in crisis, please contact emergency services immediately.
-
----
-
-Built with ❤️ for mental health support in Pakistan
