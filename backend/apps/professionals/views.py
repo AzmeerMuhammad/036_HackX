@@ -76,6 +76,62 @@ def professional_profile(request):
         return Response(response_data)
 
 
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def verify_professional(request):
+    """Submit verification documents for professional identity verification."""
+    try:
+        professional = request.user.professional_profile
+    except Professional.DoesNotExist:
+        return Response(
+            {'error': 'You are not a professional. Please sign up as a professional first.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    professional_type = request.data.get('professional_type')
+    if not professional_type or professional_type not in ['psychiatrist', 'therapist', 'psychologist']:
+        return Response(
+            {'error': 'Please select a valid professional type'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    professional.professional_type = professional_type
+
+    if professional_type == 'psychiatrist':
+        pmdc_id = request.data.get('pmdc_id')
+        if not pmdc_id:
+            return Response(
+                {'error': 'PMDC ID is required for psychiatrists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        professional.pmdc_id = pmdc_id
+    else:  # therapist or psychologist
+        degree_picture = request.FILES.get('degree_picture')
+        university_name = request.data.get('university_name')
+
+        if not degree_picture:
+            return Response(
+                {'error': 'Degree picture is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not university_name:
+            return Response(
+                {'error': 'University name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        professional.degree_picture = degree_picture
+        professional.university_name = university_name
+
+    professional.save()
+
+    return Response({
+        'message': 'Verification successful! You now have full access to the dashboard.',
+        'verified': professional.verified,
+        'professional_type': professional.professional_type
+    })
+
+
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def my_escalations(request):

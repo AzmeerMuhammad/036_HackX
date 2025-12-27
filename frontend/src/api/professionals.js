@@ -5,6 +5,11 @@ export const professionalsAPI = {
   apply: (data) => api.post('/professionals/apply/', data),
   getProfile: () => api.get('/professionals/profile/'),
   updateProfile: (data) => api.put('/professionals/profile/', data),
+  verify: (formData) => api.post('/professionals/verify/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  }),
   getPatientSummary: (patientId) => api.get(`/professionals/patients/${patientId}/summary/`),
   getPatients: () => api.get('/professionals/patients/'),
   getEscalations: () => api.get('/professionals/escalations/'),

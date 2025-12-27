@@ -7,28 +7,59 @@ class Professional(models.Model):
     Professional (psychiatrist/doctor) profile.
     Extends User model with professional-specific information.
     """
+    PROFESSIONAL_TYPE_CHOICES = [
+        ('psychiatrist', 'Psychiatrist'),
+        ('therapist', 'Therapist'),
+        ('psychologist', 'Psychologist'),
+    ]
+
     user = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='professional_profile',
         help_text="User account linked to this professional profile"
+    )
+    professional_type = models.CharField(
+        max_length=50,
+        choices=PROFESSIONAL_TYPE_CHOICES,
+        blank=True,
+        default='',
+        help_text="Type of professional (psychiatrist, therapist, psychologist)"
     )
     specialization = models.CharField(max_length=200, blank=True, default='', help_text="Area of specialization (e.g., Anxiety, Depression)")
     availability = models.TextField(blank=True, help_text="Professional availability schedule")
     verified = models.BooleanField(default=False, help_text="Has this professional been verified?")
     city = models.CharField(max_length=100, blank=True, default='', help_text="City where professional practices")
+
+    # Verification fields
+    pmdc_id = models.CharField(max_length=100, blank=True, default='', help_text="PMDC ID for psychiatrists")
+    degree_picture = models.ImageField(upload_to='professional_degrees/', blank=True, null=True, help_text="Degree certificate for therapists/psychologists")
+    university_name = models.CharField(max_length=200, blank=True, default='', help_text="University name for therapists/psychologists")
+
     created_at = models.DateTimeField(auto_now_add=True)
     
     def save(self, *args, **kwargs):
         """Auto-verify professional when profile is complete."""
-        # Check if profile is complete before saving
-        is_complete = self.is_profile_complete()
-        
-        # Auto-verify if profile is complete
-        if is_complete and not self.verified:
+        # Check if verification requirements are met
+        if self.has_verification_documents() and not self.verified:
             self.verified = True
-        
+
         super().save(*args, **kwargs)
+
+    def has_verification_documents(self):
+        """Check if professional has submitted required verification documents."""
+        if not self.professional_type:
+            return False
+
+        if self.professional_type == 'psychiatrist':
+            return bool(self.pmdc_id and self.pmdc_id.strip())
+        else:  # therapist or psychologist
+            return bool(
+                self.degree_picture and
+                self.university_name and
+                self.university_name.strip()
+            )
+
 
     class Meta:
         db_table = 'professionals_professional'

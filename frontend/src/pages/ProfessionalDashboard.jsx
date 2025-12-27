@@ -1,9 +1,20 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { professionalsAPI } from '../api/professionals'
 import { motion, AnimatePresence } from 'framer-motion'
+import VerificationModal from '../components/VerificationModal'
+import { useAuth } from '../contexts/AuthContext'
 
 const ProfessionalDashboard = () => {
+  const { user, setUser, logout } = useAuth()
+  const navigate = useNavigate()
+
+  // Verification State
+  const [isVerified, setIsVerified] = useState(true) // Default to true to prevent flash
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [checkingVerification, setCheckingVerification] = useState(true)
+
   // Tab State
   const [activeTab, setActiveTab] = useState('patients') // patients, availability, escalations
 
@@ -65,6 +76,28 @@ const ProfessionalDashboard = () => {
   useEffect(() => {
     // Just set loading to false since we're not auto-loading escalations
     setLoading(false)
+  }, [])
+
+  // Check verification status
+  useEffect(() => {
+    const checkVerification = async () => {
+      try {
+        const response = await professionalsAPI.getProfile()
+        const verified = response.data.verified || false
+        setIsVerified(verified)
+        if (!verified) {
+          setShowVerificationModal(true)
+        }
+      } catch (err) {
+        console.error('Error checking verification:', err)
+        setIsVerified(false)
+        setShowVerificationModal(true)
+      } finally {
+        setCheckingVerification(false)
+      }
+    }
+
+    checkVerification()
   }, [])
 
   const fetchPatients = async () => {
@@ -174,6 +207,33 @@ const ProfessionalDashboard = () => {
   const handleSaveProfile = () => {
     // TODO: Implement API call to save profile info
     alert('Profile updated successfully!')
+  }
+
+  const handleVerified = async () => {
+    setIsVerified(true)
+    setShowVerificationModal(false)
+    // Refresh user data
+    try {
+      const response = await professionalsAPI.getProfile()
+      // Update user context if needed
+      if (setUser) {
+        setUser(prev => ({
+          ...prev,
+          professional_profile: response.data
+        }))
+      }
+    } catch (err) {
+      console.error('Error refreshing profile:', err)
+    }
+  }
+
+  const handleShowVerification = () => {
+    setShowVerificationModal(true)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
   }
 
   const handleModalLoadAISummary = async (patient) => {
@@ -1188,6 +1248,57 @@ const ProfessionalDashboard = () => {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Verification Overlay */}
+        {!isVerified && !checkingVerification && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black bg-opacity-60 z-40 flex items-center justify-center p-4"
+            style={{ pointerEvents: 'all' }}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center"
+            >
+              <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center"
+                style={{ background: 'rgba(241, 90, 42, 0.1)' }}>
+                <svg className="w-12 h-12" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                Verify to Gain Full Access
+              </h3>
+              <p className="text-gray-600 mb-6" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Please complete your identity verification to access the professional dashboard and all its features.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleShowVerification}
+                className="px-8 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 mx-auto"
+                style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <span>Verify Now</span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Verification Modal */}
+        {showVerificationModal && (
+          <VerificationModal
+            onClose={() => setShowVerificationModal(false)}
+            onVerified={handleVerified}
+            onLogout={handleLogout}
+            canSkip={false}
+          />
+        )}
       </div>
     </Layout>
   )

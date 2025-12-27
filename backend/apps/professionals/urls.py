@@ -3,13 +3,15 @@ from .views import (
     ProfessionalListView, ProfessionalApplyView,
     my_escalations, professional_escalations,
     professional_escalation_detail, professional_escalation_verdict,
-    professional_patients, professional_profile, professional_patient_summary
+    professional_patients, professional_profile, professional_patient_summary,
+    verify_professional
 )
 
 urlpatterns = [
     path('list/', ProfessionalListView.as_view(), name='professional-list'),
     path('apply/', ProfessionalApplyView.as_view(), name='professional-apply'),
     path('profile/', professional_profile, name='professional-profile'),
+    path('verify/', verify_professional, name='verify-professional'),
     path('patients/', professional_patients, name='professional-patients'),
     path('patients/<int:user_id>/summary/', professional_patient_summary, name='professional-patient-summary'),
     path('escalations/', professional_escalations, name='professional-escalations'),
