@@ -35,7 +35,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             password=password,
             email=email or '',
             display_name=display_name or validated_data['username'],
-            is_anonymous_mode=True,
             is_professional=is_professional,
             professional_type=professional_type if is_professional else None
         )
@@ -45,6 +44,6 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'display_name', 'is_anonymous_mode', 'is_professional', 'professional_type', 'created_at')
+        fields = ('id', 'username', 'email', 'display_name', 'is_professional', 'professional_type', 'created_at')
         read_only_fields = ('id', 'created_at')
 

@@ -18,6 +18,6 @@ class ChatSessionSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ChatSession
-        fields = ('id', 'status', 'created_at', 'updated_at', 'messages')
+        fields = ('id', 'status', 'is_anonymous', 'created_at', 'updated_at', 'messages')
         read_only_fields = ('id', 'created_at', 'updated_at')
 

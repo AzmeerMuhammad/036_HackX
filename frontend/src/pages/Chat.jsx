@@ -1,18 +1,22 @@
 import { useState, useEffect, useRef } from 'react'
 import Layout from '../components/Layout'
 import { chatAPI } from '../api/chat'
+import { useAuth } from '../contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const Chat = () => {
+  const { user } = useAuth()
   const [session, setSession] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isAnonymous, setIsAnonymous] = useState(false)
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
     initializeSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -27,6 +31,8 @@ const Chat = () => {
     try {
       const response = await chatAPI.getOrCreateSession()
       setSession(response.data)
+      // Sync anonymous mode with session
+      setIsAnonymous(response.data.is_anonymous || false)
       await loadMessages(response.data.id)
     } catch (err) {
       setError('Failed to initialize chat session')
@@ -39,6 +45,35 @@ const Chat = () => {
       setMessages(response.data)
     } catch (err) {
       console.error('Failed to load messages', err)
+    }
+  }
+
+  const toggleAnonymousMode = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (!session) {
+      console.warn('Cannot toggle anonymous mode: session not loaded yet')
+      setError('Please wait for chat session to load')
+      return
+    }
+    
+    console.log('Toggling anonymous mode:', { current: isAnonymous, sessionId: session.id })
+    const newAnonymousMode = !isAnonymous
+    setIsAnonymous(newAnonymousMode)
+
+    try {
+      // Update session's anonymous mode
+      console.log('Sending update request:', { sessionId: session.id, is_anonymous: newAnonymousMode })
+      const response = await chatAPI.updateSession(session.id, { is_anonymous: newAnonymousMode })
+      console.log('Update response:', response.data)
+      setSession(response.data)
+      setError('') // Clear any previous errors
+    } catch (error) {
+      console.error('Failed to update anonymous mode:', error)
+      console.error('Error details:', error.response?.data)
+      setError(error.response?.data?.error || error.message || 'Failed to update anonymous mode')
+      setIsAnonymous(!newAnonymousMode) // Revert on error
     }
   }
 
@@ -73,11 +108,44 @@ const Chat = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#F15A2A' }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-            <h1 className="text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>Chat Support</h1>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#F15A2A' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <h1 className="text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>Chat Support</h1>
+            </div>
+            {/* Anonymous Mode Toggle */}
+            <motion.button
+              type="button"
+              whileHover={session ? { scale: 1.05 } : {}}
+              whileTap={session ? { scale: 0.95 } : {}}
+              onClick={toggleAnonymousMode}
+              disabled={!session}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl transition-all shadow-sm ${
+                !session
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+                  : isAnonymous
+                  ? 'bg-orange-500 text-white hover:bg-orange-600 cursor-pointer'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
+              }`}
+              style={{ fontFamily: "'Inter', sans-serif" }}
+              title={!session ? 'Loading session...' : (isAnonymous ? 'Anonymous mode: ON - Your identity is hidden' : 'Anonymous mode: OFF - Click to enable')}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                {isAnonymous ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                ) : (
+                  <>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </>
+                )}
+              </svg>
+              <span className="text-sm font-medium">
+                {isAnonymous ? 'Anonymous' : 'Visible'}
+              </span>
+            </motion.button>
           </div>
           <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Talk to our empathetic AI chatbot anytime</p>
         </motion.div>
@@ -120,10 +188,35 @@ const Chat = () => {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
-          className="card-3d h-[600px] flex flex-col overflow-hidden"
+          className={`card-3d h-[600px] flex flex-col overflow-hidden transition-all duration-300 ${
+            isAnonymous ? 'border-2 border-orange-300 shadow-lg' : ''
+          }`}
+          style={isAnonymous ? { 
+            background: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)',
+            boxShadow: '0 10px 25px rgba(251, 146, 60, 0.2)'
+          } : {}}
         >
+          {/* Anonymous Mode Banner */}
+          {isAnonymous && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-orange-100 border-b-2 border-orange-300 px-4 py-2 flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span className="text-sm font-medium text-orange-800" style={{ fontFamily: "'Inter', sans-serif" }}>
+                Anonymous Mode Active - Your identity is protected
+              </span>
+            </motion.div>
+          )}
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
+          <div className={`flex-1 overflow-y-auto p-6 space-y-4 transition-all duration-300 ${
+            isAnonymous 
+              ? 'bg-gradient-to-b from-orange-50/50 to-orange-100/30' 
+              : 'bg-gradient-to-b from-gray-50 to-white'
+          }`}>
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="mb-4">
@@ -152,11 +245,19 @@ const Chat = () => {
                       <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
                         message.sender === 'user' ? 'text-white' : 'bg-gray-300 text-gray-700'
                       }`}
-                      style={message.sender === 'user' ? { background: '#F15A2A' } : {}}>
+                      style={message.sender === 'user' 
+                        ? { background: isAnonymous ? '#ea580c' : '#F15A2A' } 
+                        : {}}>
                         {message.sender === 'user' ? (
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
+                          isAnonymous ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                            </svg>
+                          )
                         ) : (
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -166,15 +267,25 @@ const Chat = () => {
 
                       {/* Message Bubble */}
                       <div
-                        className={`px-4 py-3 rounded-2xl shadow-sm ${
+                        className={`px-4 py-3 rounded-2xl shadow-sm transition-all duration-300 ${
                           message.sender === 'user'
-                            ? 'text-white rounded-tr-sm'
+                            ? `text-white rounded-tr-sm ${isAnonymous ? 'border-2 border-orange-400' : ''}`
                             : 'bg-white border-2 border-gray-200 rounded-tl-sm'
                         }`}
-                        style={message.sender === 'user' ? { background: '#F15A2A', fontFamily: "'Inter', sans-serif" } : { fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
+                        style={message.sender === 'user' 
+                          ? { 
+                              background: isAnonymous ? '#ea580c' : '#F15A2A', 
+                              fontFamily: "'Inter', sans-serif",
+                              boxShadow: isAnonymous ? '0 4px 12px rgba(234, 88, 12, 0.3)' : undefined
+                            } 
+                          : { 
+                              fontFamily: "'Inter', sans-serif", 
+                              color: '#3F3F3F',
+                              background: isAnonymous ? '#fff7ed' : 'white'
+                            }}
                       >
                         <div className="text-xs opacity-75 mb-1 font-medium" style={{ fontFamily: "'Inter', sans-serif" }}>
-                          {message.sender === 'user' ? 'You' : 'Support Bot'}
+                          {message.sender === 'user' ? (isAnonymous ? 'Anonymous User' : 'You') : 'Support Bot'}
                         </div>
                         <div className="text-sm leading-relaxed" style={{ fontFamily: "'Inter', sans-serif" }}>{message.content_encrypted}</div>
                       </div>
@@ -205,7 +316,9 @@ const Chat = () => {
           </div>
 
           {/* Input Form */}
-          <form onSubmit={handleSend} className="border-t-2 border-gray-200 p-4 bg-white">
+          <form onSubmit={handleSend} className={`border-t-2 p-4 transition-all duration-300 ${
+            isAnonymous ? 'border-orange-300 bg-orange-50/50' : 'border-gray-200 bg-white'
+          }`}>
             <div className="flex space-x-3">
               <input
                 type="text"

@@ -69,10 +69,6 @@ def me_view(request):
         # Allow updating specific fields
         user = request.user
 
-        # Update is_anonymous_mode if provided
-        if 'is_anonymous_mode' in request.data:
-            user.is_anonymous_mode = request.data['is_anonymous_mode']
-
         # Update display_name if provided
         if 'display_name' in request.data:
             user.display_name = request.data['display_name']

@@ -27,7 +27,6 @@ class Command(BaseCommand):
                 defaults={
                     'display_name': user_data['display_name'],
                     'email': user_data['email'],
-                    'is_anonymous_mode': True
                 }
             )
             if created:
@@ -109,7 +108,6 @@ class Command(BaseCommand):
                 defaults={
                     'display_name': prof_data['display_name'],
                     'email': prof_data['email'],
-                    'is_anonymous_mode': False
                 }
             )
             if created:

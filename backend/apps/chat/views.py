@@ -16,16 +16,22 @@ class ChatSessionListCreateView(generics.ListCreateAPIView):
         return ChatSession.objects.filter(user=self.request.user)
     
     def create(self, request, *args, **kwargs):
-        # Get or create active session
+        # Get or create active session (default to non-anonymous)
         session, created = ChatSession.objects.get_or_create(
             user=request.user,
             status='open',
-            defaults={}
+            defaults={
+                'is_anonymous': False
+            }
         )
         
         if not created and session.status != 'open':
             # Create new session if previous one is closed/escalated
-            session = ChatSession.objects.create(user=request.user, status='open')
+            session = ChatSession.objects.create(
+                user=request.user, 
+                status='open',
+                is_anonymous=False
+            )
         
         serializer = self.get_serializer(session)
         return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
@@ -101,5 +107,23 @@ def get_messages(request, session_id):
     
     messages = session.messages.all()
     serializer = ChatMessageSerializer(messages, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['PATCH'])
+@permission_classes([permissions.IsAuthenticated])
+def update_session(request, session_id):
+    """Update chat session (e.g., toggle anonymous mode)."""
+    session = get_object_or_404(
+        ChatSession,
+        id=session_id,
+        user=request.user
+    )
+    
+    if 'is_anonymous' in request.data:
+        session.is_anonymous = request.data['is_anonymous']
+        session.save(update_fields=['is_anonymous'])
+    
+    serializer = ChatSessionSerializer(session)
     return Response(serializer.data)
 

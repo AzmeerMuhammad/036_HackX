@@ -5,5 +5,6 @@ export const chatAPI = {
   getSessions: () => api.get('/chat/sessions/'),
   sendMessage: (sessionId, content) => api.post(`/chat/sessions/${sessionId}/message/`, { content }),
   getMessages: (sessionId) => api.get(`/chat/sessions/${sessionId}/messages/`),
+  updateSession: (sessionId, data) => api.patch(`/chat/sessions/${sessionId}/`, data),
 }
 

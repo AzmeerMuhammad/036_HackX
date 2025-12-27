@@ -283,7 +283,6 @@ const Home = () => {
             </svg>
             <p className="text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
               <span className="font-semibold">Your privacy matters.</span> All your data is encrypted and secure.
-              {user?.is_anonymous_mode && <span className="ml-2 badge badge-primary">Anonymous Mode Active</span>}
             </p>
           </div>
         </motion.div>

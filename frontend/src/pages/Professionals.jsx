@@ -8,13 +8,6 @@ const Professionals = () => {
   const [professionals, setProfessionals] = useState([])
   const [consents, setConsents] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showApply, setShowApply] = useState(false)
-  const [applyForm, setApplyForm] = useState({
-    specialization: '',
-    availability: '',
-    city: '',
-  })
-  const [applying, setApplying] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -32,22 +25,6 @@ const Professionals = () => {
       console.error('Failed to load data', err)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleApply = async (e) => {
-    e.preventDefault()
-    setApplying(true)
-
-    try {
-      await professionalsAPI.apply(applyForm)
-      alert('Application submitted! It will be reviewed by administrators.')
-      setShowApply(false)
-      setApplyForm({ specialization: '', availability: '', city: '' })
-    } catch (err) {
-      alert(err.response?.data?.error || 'Failed to submit application')
-    } finally {
-      setApplying(false)
     }
   }
 
@@ -80,84 +57,9 @@ const Professionals = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Verified Professionals</h1>
-          <button
-            onClick={() => setShowApply(!showApply)}
-            className="px-4 py-2 rounded-lg transition-colors"
-            style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
-          >
-            Apply to Become Professional
-          </button>
         </div>
-
-        {showApply && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-md p-6 mb-6"
-          >
-            <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Apply as Professional</h2>
-            <form onSubmit={handleApply} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                  Specialization *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={applyForm.specialization}
-                  onChange={(e) => setApplyForm({ ...applyForm, specialization: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g., Clinical Psychology"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                  Availability *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={applyForm.availability}
-                  onChange={(e) => setApplyForm({ ...applyForm, availability: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g., Mon-Fri 9AM-5PM"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                  City
-                </label>
-                <input
-                  type="text"
-                  value={applyForm.city}
-                  onChange={(e) => setApplyForm({ ...applyForm, city: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g., Karachi"
-                />
-              </div>
-              <div className="flex space-x-4">
-                <button
-                  type="submit"
-                  disabled={applying}
-                  className="px-6 py-2 rounded-lg disabled:opacity-50 transition-colors"
-                  style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
-                >
-                  {applying ? 'Submitting...' : 'Submit Application'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowApply(false)}
-                  className="px-6 py-2 rounded-lg transition-colors"
-                  style={{ background: '#E5E7EB', fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        )}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {professionals.map((prof, idx) => (

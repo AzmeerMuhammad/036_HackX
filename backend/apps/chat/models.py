@@ -51,6 +51,10 @@ class ChatSession(models.Model):
         blank=True,
         help_text="SOP categories that have been used in this session"
     )
+    is_anonymous = models.BooleanField(
+        default=False,
+        help_text="Whether this chat session is in anonymous mode"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
