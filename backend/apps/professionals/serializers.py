@@ -11,9 +11,10 @@ class ProfessionalSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Professional
-        fields = ('id', 'user', 'specialization', 'availability', 'verified', 'city',
-                  'professional_type', 'pmdc_id', 'degree_picture', 'university_name',
-                  'created_at', 'is_profile_complete', 'profile_completion_percentage', 'missing_fields')
+        fields = ('id', 'user', 'specialization', 'years_of_experience', 'session_fee',
+                  'location', 'availability', 'verified', 'city', 'professional_type',
+                  'pmdc_id', 'degree_picture', 'university_name', 'created_at',
+                  'is_profile_complete', 'profile_completion_percentage', 'missing_fields')
         read_only_fields = ('id', 'created_at', 'verified', 'is_profile_complete', 'profile_completion_percentage', 'missing_fields')
     
     def get_is_profile_complete(self, obj):
@@ -29,10 +30,16 @@ class ProfessionalSerializer(serializers.ModelSerializer):
 class ProfessionalApplySerializer(serializers.ModelSerializer):
     specialization = serializers.CharField(required=False, allow_blank=True)
     city = serializers.CharField(required=False, allow_blank=True)
-    
+    professional_type = serializers.CharField(required=False, allow_blank=True)
+    years_of_experience = serializers.IntegerField(required=False, allow_null=True)
+    session_fee = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, allow_null=True)
+    location = serializers.CharField(required=False, allow_blank=True)
+    availability = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Professional
-        fields = ('specialization', 'availability', 'city')
+        fields = ('professional_type', 'specialization', 'years_of_experience', 'session_fee',
+                  'location', 'availability', 'city')
 
     def validate(self, attrs):
         """Validate that required fields are provided when updating profile."""
@@ -41,13 +48,13 @@ class ProfessionalApplySerializer(serializers.ModelSerializer):
             # When updating, check if fields being updated would make profile incomplete
             specialization = attrs.get('specialization', self.instance.specialization)
             city = attrs.get('city', self.instance.city)
-            
-            # If both are being set, they must not be empty
-            if 'specialization' in attrs and not specialization or not specialization.strip():
+
+            # Only validate if the field is being explicitly updated
+            if 'specialization' in attrs and (not specialization or not specialization.strip()):
                 raise serializers.ValidationError({"specialization": "Specialization cannot be empty."})
-            if 'city' in attrs and not city or not city.strip():
+            if 'city' in attrs and (not city or not city.strip()):
                 raise serializers.ValidationError({"city": "City cannot be empty."})
-        
+
         return attrs
 
     def create(self, validated_data):

@@ -27,7 +27,10 @@ class Professional(models.Model):
         help_text="Type of professional (psychiatrist, therapist, psychologist)"
     )
     specialization = models.CharField(max_length=200, blank=True, default='', help_text="Area of specialization (e.g., Anxiety, Depression)")
-    availability = models.TextField(blank=True, help_text="Professional availability schedule")
+    years_of_experience = models.IntegerField(blank=True, null=True, help_text="Years of professional experience")
+    session_fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Session fee in local currency")
+    location = models.CharField(max_length=255, blank=True, default='', help_text="Professional practice location")
+    availability = models.TextField(blank=True, help_text="Professional availability schedule (JSON format for weekly schedule)")
     verified = models.BooleanField(default=False, help_text="Has this professional been verified?")
     city = models.CharField(max_length=100, blank=True, default='', help_text="City where professional practices")
 
