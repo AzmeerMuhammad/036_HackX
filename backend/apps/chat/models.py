@@ -7,6 +7,7 @@ class ChatSession(models.Model):
     """
     Chat session between user and bot/professional.
     Each session can contain multiple messages.
+    Enhanced with conversation state, sentiment tracking, and session summary.
     """
     STATUS_CHOICES = [
         ('open', 'Open'),
@@ -25,6 +26,30 @@ class ChatSession(models.Model):
         choices=STATUS_CHOICES, 
         default='open',
         help_text="Current status of the chat session"
+    )
+    # Conversation state and context
+    conversation_state = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Conversation context: topics, sentiment trend, risk trend, asked questions, active SOP category"
+    )
+    session_summary = models.TextField(
+        blank=True,
+        help_text="Short bullet summary for professionals, updated as chat progresses"
+    )
+    sentiment_trend = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Sentiment scores over time in this session"
+    )
+    max_risk_score = models.FloatField(
+        default=0.0,
+        help_text="Highest risk score encountered in this session (0-100)"
+    )
+    active_sop_categories = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="SOP categories that have been used in this session"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -47,6 +72,7 @@ class ChatMessage(models.Model):
     """
     Encrypted chat message within a chat session.
     Messages are encrypted for privacy.
+    Enhanced with sentiment and risk scoring for intelligence.
     """
     SENDER_CHOICES = [
         ('user', 'User'),
@@ -66,6 +92,22 @@ class ChatMessage(models.Model):
         help_text="Who sent this message"
     )
     content_encrypted = encrypt(models.TextField(help_text="Encrypted message content"))
+    # Intelligence metadata (for user messages and bot responses)
+    sentiment_score = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Sentiment score for this message (-1.0 to +1.0)"
+    )
+    risk_score = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Risk score for this message (0-100)"
+    )
+    used_sop_ids = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="IDs of SOP documents used to generate bot response (for auditing)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

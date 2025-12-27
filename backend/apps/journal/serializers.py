@@ -8,12 +8,12 @@ class JournalEntrySerializer(serializers.ModelSerializer):
         model = JournalEntry
         fields = (
             'id', 'checkin_mood', 'checkin_intensity', 'text_encrypted',
-            'ai_summary', 'sentiment_score', 'intensity_score',
-            'key_themes', 'risk_flags', 'suggest_start_chat', 'created_at'
+            'ai_summary', 'sentiment_score', 'sentiment_label', 'intensity_score',
+            'key_themes', 'detected_emotions', 'risk_flags', 'suggest_start_chat', 'created_at'
         )
         read_only_fields = (
-            'id', 'ai_summary', 'sentiment_score', 'intensity_score',
-            'key_themes', 'risk_flags', 'suggest_start_chat', 'created_at'
+            'id', 'ai_summary', 'sentiment_score', 'sentiment_label', 'intensity_score',
+            'key_themes', 'detected_emotions', 'risk_flags', 'suggest_start_chat', 'created_at'
         )
 
 
@@ -47,8 +47,10 @@ class JournalEntryCreateSerializer(serializers.ModelSerializer):
         analysis = analyze_journal(text, last_7_days)
         entry.ai_summary = analysis['ai_summary']
         entry.sentiment_score = analysis['sentiment_score']
+        entry.sentiment_label = analysis.get('sentiment_label', 'neutral')
         entry.intensity_score = analysis['intensity_score']
         entry.key_themes = analysis['key_themes']
+        entry.detected_emotions = analysis.get('detected_emotions', [])
         entry.risk_flags = analysis['risk_flags']
         entry.suggest_start_chat = analysis['suggest_start_chat']
         entry.save()
