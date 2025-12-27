@@ -69,23 +69,37 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database - Multiple databases in parallel
-# PostgreSQL as default (for pgAdmin access)
-# SQLite as backup/secondary database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='safespace'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    },
-    'sqlite': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+# Database Configuration - Switch between SQLite and PostgreSQL
+# Controlled by DB_ENGINE in .env file (sqlite for dev, postgresql for production)
+
+# Define both database configurations
+_SQLITE_DB = {
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': BASE_DIR / 'db.sqlite3',
 }
+
+_POSTGRESQL_DB = {
+    'ENGINE': 'django.db.backends.postgresql',
+    'NAME': config('DB_NAME', default='safespace'),
+    'USER': config('DB_USER', default='postgres'),
+    'PASSWORD': config('DB_PASSWORD', default='postgres'),
+    'HOST': config('DB_HOST', default='localhost'),
+    'PORT': config('DB_PORT', default='5432'),
+}
+
+# Set default database based on DB_ENGINE in .env
+DB_ENGINE = config('DB_ENGINE', default='sqlite')
+
+if DB_ENGINE == 'postgresql':
+    DATABASES = {
+        'default': _POSTGRESQL_DB,
+        'sqlite': _SQLITE_DB,  # Keep SQLite available as secondary
+    }
+else:
+    DATABASES = {
+        'default': _SQLITE_DB,
+        'postgres': _POSTGRESQL_DB,  # Keep PostgreSQL available as secondary
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
