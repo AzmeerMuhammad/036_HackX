@@ -16,25 +16,25 @@ class ChatSessionListCreateView(generics.ListCreateAPIView):
         return ChatSession.objects.filter(user=self.request.user)
     
     def create(self, request, *args, **kwargs):
-        # Get most recent open session or create new one
-        session = ChatSession.objects.filter(
+        # Get or create active session (default to non-anonymous)
+        session, created = ChatSession.objects.get_or_create(
             user=request.user,
-            status='open'
-        ).order_by('-created_at').first()
-
-        if session:
-            # Return existing session
-            serializer = self.get_serializer(session)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            # Create new session
+            status='open',
+            defaults={
+                'is_anonymous': False
+            }
+        )
+        
+        if not created and session.status != 'open':
+            # Create new session if previous one is closed/escalated
             session = ChatSession.objects.create(
-                user=request.user,
+                user=request.user, 
                 status='open',
                 is_anonymous=False
             )
-            serializer = self.get_serializer(session)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        serializer = self.get_serializer(session)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 
 @api_view(['POST'])

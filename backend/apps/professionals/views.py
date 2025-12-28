@@ -423,59 +423,26 @@ def professional_patient_summary(request, user_id):
     if not risk_indicators:
         risk_indicators = ['No significant risk indicators detected']
     
-    # Generate AI-powered comprehensive overview
-    try:
-        from utils.ai_service import ai_service
-        from apps.chat.models import ChatSession, ChatMessage
-
-        # Prepare journal data for AI
-        journals_data = []
-        for entry in recent_entries:
-            journals_data.append({
-                'content': entry.text_encrypted,
-                'created_at': entry.created_at.strftime('%Y-%m-%d %H:%M'),
-                'detected_emotions': ', '.join([e.get('emotion', '') for e in entry.detected_emotions]) if entry.detected_emotions else 'None'
-            })
-
-        # Get chat history if available
-        chat_history_data = None
-        chat_sessions = ChatSession.objects.filter(user=patient, status__in=['open', 'escalated', 'closed']).order_by('-created_at')
-        if chat_sessions.exists():
-            latest_session = chat_sessions.first()
-            messages = ChatMessage.objects.filter(session=latest_session).order_by('created_at')[:50]
-            chat_history_data = []
-            for msg in messages:
-                chat_history_data.append({
-                    'role': msg.sender,
-                    'content': msg.content_encrypted
-                })
-
-        # Generate AI summary
-        ai_overview = ai_service.generate_patient_summary(journals_data, chat_history_data)
-        overview = ai_overview
-
-    except Exception as e:
-        print(f"Warning: AI summary generation failed, using fallback: {e}")
-        # Fallback to rule-based overview
-        if avg_sentiment > 0.3:
-            overview = f"Patient shows overall positive patterns with {total_entries} journal entries. "
-            if sentiment_trend == 'improving':
-                overview += "Recent entries indicate continued improvement in mood and coping mechanisms."
-            else:
-                overview += "Sentiment remains stable."
-        elif avg_sentiment < -0.3:
-            overview = f"Patient shows challenging emotional patterns across {total_entries} entries. "
-            if key_themes_list:
-                overview += f"Key concerns include {', '.join(key_themes_list[:3])}. "
-            if sentiment_trend == 'declining':
-                overview += "Recent entries show a decline in emotional well-being that requires attention."
-            else:
-                overview += "Monitoring and support are recommended."
+    # Generate overview
+    if avg_sentiment > 0.3:
+        overview = f"Patient shows overall positive patterns with {total_entries} journal entries. "
+        if sentiment_trend == 'improving':
+            overview += "Recent entries indicate continued improvement in mood and coping mechanisms."
         else:
-            overview = f"Patient has {total_entries} journal entries showing mixed emotional states. "
-            if key_themes_list:
-                overview += f"Common themes include {', '.join(key_themes_list[:3])}. "
-            overview += "Regular monitoring is advised."
+            overview += "Sentiment remains stable."
+    elif avg_sentiment < -0.3:
+        overview = f"Patient shows challenging emotional patterns across {total_entries} entries. "
+        if key_themes_list:
+            overview += f"Key concerns include {', '.join(key_themes_list[:3])}. "
+        if sentiment_trend == 'declining':
+            overview += "Recent entries show a decline in emotional well-being that requires attention."
+        else:
+            overview += "Monitoring and support are recommended."
+    else:
+        overview = f"Patient has {total_entries} journal entries showing mixed emotional states. "
+        if key_themes_list:
+            overview += f"Common themes include {', '.join(key_themes_list[:3])}. "
+        overview += "Regular monitoring is advised."
     
     # Generate recommendations
     recommendations = []
