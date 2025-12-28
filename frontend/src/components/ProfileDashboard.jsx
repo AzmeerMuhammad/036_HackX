@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { authAPI } from '../api/auth'
 import { journalAPI } from '../api/journal'
 import { chatAPI } from '../api/chat'
+import { professionalsAPI } from '../api/professionals'
 
 const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
   const [activeSection, setActiveSection] = useState('snapshot')
@@ -21,16 +22,88 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
   const [sessionHistory, setSessionHistory] = useState(null)
   const [statsLoading, setStatsLoading] = useState(false)
 
+  // Professional profile state
+  const [professionalProfile, setProfessionalProfile] = useState({
+    professional_type: '',
+    years_of_experience: '',
+    session_fee: '',
+    location: '',
+    availability: {}
+  })
+  const [professionalLoading, setProfessionalLoading] = useState(false)
+  const [professionalError, setProfessionalError] = useState('')
+  const [professionalSuccess, setProfessionalSuccess] = useState('')
+
   const isProfessional = user?.is_professional || user?.professional_type
 
   useEffect(() => {
-    loadDashboardData()
+    if (!isProfessional) {
+      loadDashboardData()
+    } else {
+      loadProfessionalProfile()
+    }
     setProfileData({
       email: user?.email || '',
       password: '',
       password_confirm: ''
     })
   }, [user])
+
+  const loadProfessionalProfile = async () => {
+    try {
+      const response = await professionalsAPI.getProfile()
+      const data = response.data
+
+      // Default availability structure
+      const defaultAvailability = {
+        monday: { available: false, startTime: '09:00', endTime: '17:00' },
+        tuesday: { available: false, startTime: '09:00', endTime: '17:00' },
+        wednesday: { available: false, startTime: '09:00', endTime: '17:00' },
+        thursday: { available: false, startTime: '09:00', endTime: '17:00' },
+        friday: { available: false, startTime: '09:00', endTime: '17:00' },
+        saturday: { available: false, startTime: '09:00', endTime: '17:00' },
+        sunday: { available: false, startTime: '09:00', endTime: '17:00' }
+      }
+
+      // Parse availability from JSON if it exists and is valid
+      let availability = defaultAvailability
+      if (data.availability && data.availability.trim()) {
+        try {
+          const parsed = JSON.parse(data.availability)
+          // Merge with defaults to ensure all days exist
+          availability = { ...defaultAvailability, ...parsed }
+        } catch (e) {
+          console.log('Could not parse availability JSON, using defaults')
+        }
+      }
+
+      setProfessionalProfile({
+        professional_type: data.professional_type || '',
+        years_of_experience: data.years_of_experience || '',
+        session_fee: data.session_fee || '',
+        location: data.location || '',
+        availability: availability
+      })
+    } catch (err) {
+      console.error('Error loading professional profile:', err)
+      // Set default values even on error
+      setProfessionalProfile({
+        professional_type: user?.professional_type || '',
+        years_of_experience: '',
+        session_fee: '',
+        location: '',
+        availability: {
+          monday: { available: false, startTime: '09:00', endTime: '17:00' },
+          tuesday: { available: false, startTime: '09:00', endTime: '17:00' },
+          wednesday: { available: false, startTime: '09:00', endTime: '17:00' },
+          thursday: { available: false, startTime: '09:00', endTime: '17:00' },
+          friday: { available: false, startTime: '09:00', endTime: '17:00' },
+          saturday: { available: false, startTime: '09:00', endTime: '17:00' },
+          sunday: { available: false, startTime: '09:00', endTime: '17:00' }
+        }
+      })
+    }
+  }
 
   const loadDashboardData = async () => {
     setStatsLoading(true)
@@ -123,6 +196,41 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
       console.error('Failed to load dashboard data:', err)
     } finally {
       setStatsLoading(false)
+    }
+  }
+
+  const handleProfessionalProfileUpdate = async (e) => {
+    e.preventDefault()
+    setProfessionalError('')
+    setProfessionalSuccess('')
+    setProfessionalLoading(true)
+
+    try {
+      const updateData = {
+        years_of_experience: professionalProfile.years_of_experience ? parseInt(professionalProfile.years_of_experience) : null,
+        session_fee: professionalProfile.session_fee ? parseFloat(professionalProfile.session_fee) : null,
+        location: professionalProfile.location || '',
+        availability: JSON.stringify(professionalProfile.availability)
+      }
+
+      const response = await professionalsAPI.updateProfile(updateData)
+      console.log('Update response:', response.data)
+      setProfessionalSuccess('Professional profile updated successfully!')
+
+      // Reload the professional profile to get updated data
+      await loadProfessionalProfile()
+
+      // Auto-close success message after 3 seconds
+      setTimeout(() => {
+        setProfessionalSuccess('')
+      }, 3000)
+    } catch (err) {
+      console.error('Update error:', err.response?.data)
+      const errorMsg = err.response?.data?.error ||
+                       (err.response?.data ? JSON.stringify(err.response.data) : 'Failed to update professional profile')
+      setProfessionalError(errorMsg)
+    } finally {
+      setProfessionalLoading(false)
     }
   }
 
@@ -227,11 +335,13 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
           <nav className="space-y-2">
             {[
               { id: 'snapshot', label: 'User Snapshot', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg> },
-              { id: 'mood', label: 'Mood Overview', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-              { id: 'stats', label: 'Journaling Stats', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
+              !isProfessional && { id: 'mood', label: 'Mood Overview', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+              !isProfessional && { id: 'stats', label: 'Journaling Stats', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
+              isProfessional && { id: 'profile', label: 'Profile', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg> },
+              isProfessional && { id: 'availability', label: 'Weekly Availability', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
               { id: 'sessions', label: 'Session History', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg> },
               { id: 'settings', label: 'Settings', icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> }
-            ].map((item) => (
+            ].filter(Boolean).map((item) => (
               <motion.button
                 key={item.id}
                 whileHover={{ x: 4 }}
@@ -305,14 +415,14 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
                 <div className="bg-white p-6 rounded-xl shadow-sm">
                   <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>Account Type</label>
                   <p className="text-lg font-semibold capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                    {isProfessional ? user?.professional_type || 'Professional' : 'Regular User'}
+                    {isProfessional ? professionalProfile.professional_type || user?.professional_type || 'Professional' : 'Regular User'}
                   </p>
                 </div>
 
                 {isProfessional && (
                   <div className="bg-white p-6 rounded-xl shadow-sm">
                     <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>Professional Type</label>
-                    <p className="text-lg font-semibold capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{user?.professional_type}</p>
+                    <p className="text-lg font-semibold capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{professionalProfile.professional_type || user?.professional_type}</p>
                   </div>
                 )}
 
@@ -535,6 +645,238 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
                   <p style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>No chat sessions yet. Start a chat to see your history!</p>
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {/* Professional Profile Section */}
+          {activeSection === 'profile' && isProfessional && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <h2 className="text-3xl font-bold mb-6" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Professional Profile</h2>
+
+              {professionalError && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span style={{ fontFamily: "'Inter', sans-serif" }}>{professionalError}</span>
+                </motion.div>
+              )}
+
+              {professionalSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span style={{ fontFamily: "'Inter', sans-serif" }}>{professionalSuccess}</span>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleProfessionalProfileUpdate} className="space-y-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Years of Experience
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={professionalProfile.years_of_experience}
+                        onChange={(e) => setProfessionalProfile({ ...professionalProfile, years_of_experience: e.target.value })}
+                        placeholder="e.g., 5"
+                        className="input-modern"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Session Fee
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={professionalProfile.session_fee}
+                        onChange={(e) => setProfessionalProfile({ ...professionalProfile, session_fee: e.target.value })}
+                        placeholder="e.g., 100.00"
+                        className="input-modern"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Location
+                      </label>
+                      <input
+                        type="text"
+                        value={professionalProfile.location}
+                        onChange={(e) => setProfessionalProfile({ ...professionalProfile, location: e.target.value })}
+                        placeholder="e.g., New York, NY"
+                        className="input-modern"
+                      />
+                    </div>
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={professionalLoading}
+                    className="w-full py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    {professionalLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Save Profile</span>
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </form>
+            </motion.div>
+          )}
+
+          {/* Weekly Availability Section */}
+          {activeSection === 'availability' && isProfessional && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <h2 className="text-3xl font-bold mb-6" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Weekly Availability</h2>
+
+              {professionalError && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span style={{ fontFamily: "'Inter', sans-serif" }}>{professionalError}</span>
+                </motion.div>
+              )}
+
+              {professionalSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center space-x-2"
+                >
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span style={{ fontFamily: "'Inter', sans-serif" }}>{professionalSuccess}</span>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleProfessionalProfileUpdate} className="space-y-6">
+                <div className="bg-white p-6 rounded-xl shadow-sm">
+                  <div className="space-y-4">
+                    {Object.keys(professionalProfile.availability).map((day) => (
+                      <div key={day} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div className="flex items-center gap-3 flex-1 min-w-[120px]">
+                            <input
+                              type="checkbox"
+                              checked={professionalProfile.availability[day]?.available || false}
+                              onChange={(e) => setProfessionalProfile({
+                                ...professionalProfile,
+                                availability: {
+                                  ...professionalProfile.availability,
+                                  [day]: { ...professionalProfile.availability[day], available: e.target.checked }
+                                }
+                              })}
+                              className="w-5 h-5 rounded"
+                              style={{ accentColor: '#F15A2A' }}
+                            />
+                            <span className="font-medium capitalize" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{day}</span>
+                          </div>
+
+                          {professionalProfile.availability[day]?.available && (
+                            <div className="flex items-center gap-4 flex-1">
+                              <div>
+                                <label className="text-xs text-gray-600 mb-1 block">Start Time</label>
+                                <input
+                                  type="time"
+                                  value={professionalProfile.availability[day]?.startTime || '09:00'}
+                                  onChange={(e) => setProfessionalProfile({
+                                    ...professionalProfile,
+                                    availability: {
+                                      ...professionalProfile.availability,
+                                      [day]: { ...professionalProfile.availability[day], startTime: e.target.value }
+                                    }
+                                  })}
+                                  className="input-modern py-2 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-gray-600 mb-1 block">End Time</label>
+                                <input
+                                  type="time"
+                                  value={professionalProfile.availability[day]?.endTime || '17:00'}
+                                  onChange={(e) => setProfessionalProfile({
+                                    ...professionalProfile,
+                                    availability: {
+                                      ...professionalProfile.availability,
+                                      [day]: { ...professionalProfile.availability[day], endTime: e.target.value }
+                                    }
+                                  })}
+                                  className="input-modern py-2 text-sm"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={professionalLoading}
+                    className="w-full py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+                    style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    {professionalLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        <span>Saving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Save Availability</span>
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </form>
             </motion.div>
           )}
 
