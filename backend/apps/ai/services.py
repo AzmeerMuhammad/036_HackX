@@ -138,17 +138,45 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
             if sentiment_score < avg_recent - 0.3:  # Significant drop
                 recent_negative_trend = True
     
-    # Generate 2-line summary (enhanced with emotion model results)
-    if sentiment_score > 0.3:
-        summary = f"Overall positive mood detected. {', '.join(themes[:2]) if themes else 'General reflection'} noted."
-    elif sentiment_score < -0.3:
-        if detected_emotions:
-            top_emotions = ', '.join([e['emotion'] for e in detected_emotions[:2]])
-            summary = f"Challenging emotions expressed. {top_emotions} detected. {', '.join(themes[:2]) if themes else 'Difficult feelings'} identified."
+    # Generate 2-line summary (enhanced with OpenRouter AI + emotion model results)
+    try:
+        from utils.ai_service import ai_service
+        detected_emotions_str = ', '.join([e['emotion'] for e in detected_emotions[:3]]) if detected_emotions else None
+        print(f"[AI Service] Calling OpenRouter API for journal analysis...")
+        ai_analysis = ai_service.analyze_journal_summary(text, detected_emotions_str)
+        print(f"[AI Service] Received response: {ai_analysis}")
+        summary = ai_analysis.get('summary', '')
+        # Use AI sentiment if available and more confident
+        if ai_analysis.get('sentiment_score') is not None:
+            ai_sentiment_score = ai_analysis['sentiment_score']
+            # Blend AI and ML sentiment (70% AI, 30% ML)
+            sentiment_score = (ai_sentiment_score * 0.7) + (sentiment_score * 0.3)
+            sentiment_score = max(-1.0, min(1.0, sentiment_score))
+            # Update sentiment label
+            if sentiment_score > 0.2:
+                sentiment_label = 'positive'
+            elif sentiment_score < -0.2:
+                sentiment_label = 'negative'
+            else:
+                sentiment_label = 'neutral'
+        # Extract additional themes from AI
+        if ai_analysis.get('key_themes'):
+            themes = list(set(themes + ai_analysis['key_themes']))
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] OpenRouter AI summary failed: {e}")
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        # Fallback to rule-based summary
+        if sentiment_score > 0.3:
+            summary = f"Overall positive mood detected. {', '.join(themes[:2]) if themes else 'General reflection'} noted."
+        elif sentiment_score < -0.3:
+            if detected_emotions:
+                top_emotions = ', '.join([e['emotion'] for e in detected_emotions[:2]])
+                summary = f"Challenging emotions expressed. {top_emotions} detected. {', '.join(themes[:2]) if themes else 'Difficult feelings'} identified."
+            else:
+                summary = f"Challenging emotions expressed. {', '.join(themes[:2]) if themes else 'Difficult feelings'} identified."
         else:
-            summary = f"Challenging emotions expressed. {', '.join(themes[:2]) if themes else 'Difficult feelings'} identified."
-    else:
-        summary = f"Mixed emotional state. {', '.join(themes[:2]) if themes else 'Various thoughts'} reflected."
+            summary = f"Mixed emotional state. {', '.join(themes[:2]) if themes else 'Various thoughts'} reflected."
     
     # Suggest chat if risk flags or negative trend
     suggest_start_chat = (
