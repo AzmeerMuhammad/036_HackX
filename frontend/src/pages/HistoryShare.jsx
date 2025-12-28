@@ -32,7 +32,9 @@ const HistoryShare = () => {
       const response = await historyAPI.generate()
       setSnapshotId(response.data.snapshot_id)
     } catch (err) {
-      alert('Failed to generate history snapshot')
+      console.error('Failed to generate history snapshot:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to generate history snapshot'
+      alert(errorMessage)
     } finally {
       setGenerating(false)
     }
@@ -75,8 +77,8 @@ const HistoryShare = () => {
 
         <div className="rounded-lg p-4 mb-6" style={{ background: 'rgba(241, 90, 42, 0.05)', border: '1px solid rgba(241, 90, 42, 0.2)' }}>
           <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
-            Your history will be shared with professionals you've granted consent to.
-            History includes journal summaries, themes, risk trends, and chat highlights from the last 7 days.
+            Your complete history will be shared with professionals you've granted consent to.
+            The report includes all journal entries, chat sessions, escalations, mood trends, risk assessments, and emotional patterns from your entire account history.
           </p>
         </div>
 
@@ -111,7 +113,7 @@ const HistoryShare = () => {
             <div className="bg-white rounded-xl shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Generate & Download</h2>
               <p className="mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                Generate a branded PDF report of your 7-day history that you can share with professionals.
+                Generate a comprehensive PDF report of your complete history including all journal entries, chat sessions, and escalations. This report helps professionals with initial history-taking and provides a complete overview of your mental health journey.
               </p>
               <div className="flex space-x-4">
                 <button

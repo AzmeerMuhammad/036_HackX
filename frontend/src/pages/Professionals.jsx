@@ -56,6 +56,55 @@ const Professionals = () => {
     return consents.some(c => c.professional.id === professionalId && c.active)
   }
 
+  const formatAvailability = (availabilityStr) => {
+    if (!availabilityStr || !availabilityStr.trim()) {
+      return null // Don't show anything if not set
+    }
+
+    try {
+      const availability = typeof availabilityStr === 'string' 
+        ? JSON.parse(availabilityStr) 
+        : availabilityStr
+
+      const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+      
+      const availableDays = days
+        .filter(day => availability[day]?.available)
+        .map((day) => {
+          const dayIndex = days.indexOf(day)
+          const dayName = dayNames[dayIndex]
+          const startTime = availability[day]?.startTime || '09:00'
+          const endTime = availability[day]?.endTime || '17:00'
+          // Format time to remove seconds if present
+          const formatTime = (time) => time.substring(0, 5)
+          return `${dayName}: ${formatTime(startTime)} - ${formatTime(endTime)}`
+        })
+
+      if (availableDays.length === 0) {
+        return null // Don't show if no days available
+      }
+
+      // If all days have same hours, show simplified format
+      if (availableDays.length > 3) {
+        const firstTime = availableDays[0].split(': ')[1]
+        const allSameTime = availableDays.every(day => day.split(': ')[1] === firstTime)
+        if (allSameTime) {
+          return `${availableDays.length} days/week, ${firstTime}`
+        }
+      }
+
+      // Show first 2-3 days, then "and X more" if needed
+      if (availableDays.length > 3) {
+        return `${availableDays.slice(0, 2).join(', ')}, and ${availableDays.length - 2} more days`
+      }
+
+      return availableDays.join(' • ')
+    } catch (e) {
+      return null // Don't show if parsing fails
+    }
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -87,8 +136,10 @@ const Professionals = () => {
               </h3>
               <p className="font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>{prof.specialization}</p>
               {prof.city && <p className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>📍 {prof.city}</p>}
-              {prof.availability && (
-                <p className="text-sm mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>⏰ {prof.availability}</p>
+              {prof.availability && formatAvailability(prof.availability) && (
+                <p className="text-sm mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  ⏰ {formatAvailability(prof.availability)}
+                </p>
               )}
               {hasConsent(prof.id) ? (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-sm text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#10B981' }}>

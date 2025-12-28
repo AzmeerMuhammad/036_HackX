@@ -27,65 +27,83 @@ const DataTable = ({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-      <table className="w-full border-collapse bg-white">
-        <thead>
-          <tr className="border-b-2" style={{ background: 'linear-gradient(to right, rgba(241, 90, 42, 0.08), rgba(241, 90, 42, 0.05), rgba(241, 90, 42, 0.08))', borderColor: 'rgba(241, 90, 42, 0.3)' }}>
-            {columns.map((column, idx) => (
-              <th
-                key={idx}
-                className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                  idx === 0 ? 'rounded-tl-lg pl-6' : ''
-                } ${
-                  idx === columns.length - 1 ? 'rounded-tr-lg pr-6' : ''
-                }`}
-                style={{ minWidth: column.minWidth || 'auto', fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}
-              >
-                <div className="flex items-center gap-2">
-                  {column.icon && <span style={{ color: '#F15A2A' }}>{column.icon}</span>}
-                  {column.label}
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
-          {data.map((row, rowIdx) => (
-            <motion.tr
-              key={row.id || rowIdx}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: rowIdx * 0.03 }}
-              onClick={() => onRowClick && onRowClick(row)}
-              className={`transition-all duration-200 ${
-                onRowClick ? 'cursor-pointer' : ''
-              } ${rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
-              style={{
-                '&:hover': {
-                  background: 'linear-gradient(to right, rgba(241, 90, 42, 0.05), rgba(241, 90, 42, 0.03))'
-                }
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'linear-gradient(to right, rgba(241, 90, 42, 0.05), rgba(241, 90, 42, 0.03))'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = rowIdx % 2 === 0 ? 'white' : 'rgba(249, 250, 251, 0.5)'
-              }}
-            >
-              {columns.map((column, colIdx) => (
-                <td
-                  key={colIdx}
-                  className={`px-6 py-4 text-sm text-gray-900 ${
-                    column.nowrap !== false ? 'whitespace-nowrap' : ''
+    <div className="rounded-xl border border-gray-200 shadow-lg overflow-hidden bg-white">
+      <div className="overflow-y-auto overflow-x-hidden max-h-[calc(100vh-250px)]">
+        <table className="w-full border-collapse bg-white table-fixed">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b-2" style={{ 
+              background: 'linear-gradient(to right, rgba(241, 90, 42, 0.12), rgba(241, 90, 42, 0.08), rgba(241, 90, 42, 0.12))', 
+              borderColor: 'rgba(241, 90, 42, 0.2)',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+            }}>
+              {columns.map((column, idx) => (
+                <th
+                  key={idx}
+                  className={`px-4 py-4 text-center text-xs font-bold uppercase tracking-wider ${
+                    idx === 0 ? 'rounded-tl-xl pl-6' : ''
+                  } ${
+                    idx === columns.length - 1 ? 'rounded-tr-xl pr-6' : ''
                   }`}
+                  style={{ 
+                    width: column.width || 'auto',
+                    minWidth: column.minWidth || 'auto',
+                    maxWidth: column.maxWidth || 'none',
+                    fontFamily: "'Inter', sans-serif", 
+                    color: '#3F3F3F',
+                    letterSpacing: '0.05em'
+                  }}
                 >
-                  {column.render ? column.render(row[column.key], row) : row[column.key] || '-'}
-                </td>
+                  <div className="flex items-center justify-center gap-1.5">
+                    {column.icon && <span style={{ color: '#F15A2A' }}>{column.icon}</span>}
+                    <span className="truncate">{column.label}</span>
+                  </div>
+                </th>
               ))}
-            </motion.tr>
-          ))}
-        </tbody>
-      </table>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-100">
+            {data.map((row, rowIdx) => (
+              <motion.tr
+                key={row.id || rowIdx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: rowIdx * 0.03 }}
+                onClick={() => onRowClick && onRowClick(row)}
+                className={`transition-all duration-200 border-b border-gray-100 ${
+                  onRowClick ? 'cursor-pointer' : ''
+                } ${rowIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(to right, rgba(241, 90, 42, 0.08), rgba(241, 90, 42, 0.05), rgba(241, 90, 42, 0.08))'
+                  e.currentTarget.style.transform = 'scale(1.01)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = rowIdx % 2 === 0 ? 'white' : 'rgba(249, 250, 251, 0.3)'
+                  e.currentTarget.style.transform = 'scale(1)'
+                }}
+              >
+                {columns.map((column, colIdx) => (
+                  <td
+                    key={colIdx}
+                    className={`px-4 py-4 text-sm text-gray-900 text-center ${
+                      column.nowrap !== false ? 'whitespace-nowrap' : ''
+                    }`}
+                    style={{
+                      width: column.width || 'auto',
+                      minWidth: column.minWidth || 'auto',
+                      maxWidth: column.maxWidth || 'none',
+                      fontFamily: "'Inter', sans-serif"
+                    }}
+                  >
+                    <div className="flex items-center justify-center">
+                      {column.render ? column.render(row[column.key], row) : row[column.key] || '-'}
+                    </div>
+                  </td>
+                ))}
+              </motion.tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

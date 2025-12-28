@@ -15,17 +15,26 @@ from apps.professionals.models import Professional
 @permission_classes([IsAuthenticated])
 def generate_history(request):
     """Generate patient history snapshot."""
-    history_json = generate_history_json(request.user)
-    
-    snapshot = PatientHistorySnapshot.objects.create(
-        user=request.user,
-        json_data=history_json
-    )
-    
-    return Response({
-        'snapshot_id': snapshot.id,
-        'generated_at': snapshot.created_at.isoformat(),
-    })
+    try:
+        history_json = generate_history_json(request.user)
+        
+        snapshot = PatientHistorySnapshot.objects.create(
+            user=request.user,
+            json_data=history_json
+        )
+        
+        return Response({
+            'snapshot_id': snapshot.id,
+            'generated_at': snapshot.created_at.isoformat(),
+        })
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"Error generating history snapshot: {error_details}")  # Log for debugging
+        return Response(
+            {'error': f'Failed to generate history snapshot: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['GET'])

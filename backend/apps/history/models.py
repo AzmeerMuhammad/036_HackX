@@ -5,8 +5,8 @@ from apps.accounts.models import User
 class PatientHistorySnapshot(models.Model):
     """
     Patient history snapshot stored as JSON.
-    Contains 7-day journal summaries, themes, risk trends, and chat highlights.
-    Used for generating PDF reports to share with professionals.
+    Contains complete journal entries, chat sessions, escalations, themes, risk trends, and emotional patterns.
+    Used for generating comprehensive PDF reports to share with professionals for initial history-taking.
     """
     user = models.ForeignKey(
         User, 
