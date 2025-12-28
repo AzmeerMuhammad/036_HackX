@@ -143,25 +143,34 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
         from utils.ai_service import ai_service
         detected_emotions_str = ', '.join([e['emotion'] for e in detected_emotions[:3]]) if detected_emotions else None
         print(f"[AI Service] Calling OpenRouter API for journal analysis...")
+        print(f"[AI Service] Journal text length: {len(text)} chars")
+        print(f"[AI Service] Detected emotions: {detected_emotions_str}")
         ai_analysis = ai_service.analyze_journal_summary(text, detected_emotions_str)
         print(f"[AI Service] Received response: {ai_analysis}")
-        summary = ai_analysis.get('summary', '')
-        # Use AI sentiment if available and more confident
-        if ai_analysis.get('sentiment_score') is not None:
-            ai_sentiment_score = ai_analysis['sentiment_score']
-            # Blend AI and ML sentiment (70% AI, 30% ML)
-            sentiment_score = (ai_sentiment_score * 0.7) + (sentiment_score * 0.3)
-            sentiment_score = max(-1.0, min(1.0, sentiment_score))
-            # Update sentiment label
-            if sentiment_score > 0.2:
-                sentiment_label = 'positive'
-            elif sentiment_score < -0.2:
-                sentiment_label = 'negative'
-            else:
-                sentiment_label = 'neutral'
-        # Extract additional themes from AI
-        if ai_analysis.get('key_themes'):
-            themes = list(set(themes + ai_analysis['key_themes']))
+        
+        # Check if we got a valid response (not fallback)
+        if ai_analysis.get('summary') and ai_analysis.get('summary') != "Journal entry recorded successfully.":
+            print(f"[AI Service] ✓ Using AI-generated summary")
+            summary = ai_analysis.get('summary', '')
+            # Use AI sentiment if available and more confident
+            if ai_analysis.get('sentiment_score') is not None:
+                ai_sentiment_score = ai_analysis['sentiment_score']
+                # Blend AI and ML sentiment (70% AI, 30% ML)
+                sentiment_score = (ai_sentiment_score * 0.7) + (sentiment_score * 0.3)
+                sentiment_score = max(-1.0, min(1.0, sentiment_score))
+                # Update sentiment label
+                if sentiment_score > 0.2:
+                    sentiment_label = 'positive'
+                elif sentiment_score < -0.2:
+                    sentiment_label = 'negative'
+                else:
+                    sentiment_label = 'neutral'
+            # Extract additional themes from AI
+            if ai_analysis.get('key_themes'):
+                themes = list(set(themes + ai_analysis['key_themes']))
+        else:
+            print(f"[AI Service] ⚠ AI service returned fallback response, using rule-based summary")
+            raise Exception("AI service returned fallback response")
     except Exception as e:
         import traceback
         print(f"[ERROR] OpenRouter AI summary failed: {e}")

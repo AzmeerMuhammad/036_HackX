@@ -157,18 +157,27 @@ Return ONLY the JSON object, no additional text."""
         response = self._make_request(messages, max_tokens=500, temperature=0.5)
 
         if response:
+            print(f"[OpenRouter] Raw response received: {response[:200]}...")
             try:
                 # Extract JSON from response
                 json_start = response.find('{')
                 json_end = response.rfind('}') + 1
                 if json_start != -1 and json_end > json_start:
                     json_str = response[json_start:json_end]
+                    print(f"[OpenRouter] Extracted JSON: {json_str[:200]}...")
                     result = json.loads(json_str)
+                    print(f"[OpenRouter] ✓ Successfully parsed JSON response")
                     return result
-            except json.JSONDecodeError:
-                pass
+                else:
+                    print(f"[OpenRouter] ✗ No JSON found in response")
+            except json.JSONDecodeError as e:
+                print(f"[OpenRouter] ✗ JSON decode error: {e}")
+                print(f"[OpenRouter] Response was: {response[:500]}")
+        else:
+            print(f"[OpenRouter] ✗ No response from API (all keys failed or no keys configured)")
 
         # Fallback if AI fails
+        print(f"[OpenRouter] ⚠ Using fallback response")
         return {
             "summary": "Journal entry recorded successfully.",
             "sentiment": "neutral",

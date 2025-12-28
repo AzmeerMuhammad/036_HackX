@@ -48,7 +48,14 @@ class JournalEntryCreateSerializer(serializers.ModelSerializer):
         entry.ai_summary = analysis['ai_summary']
         entry.sentiment_score = float(analysis.get('sentiment_score', 0.0)) if analysis.get('sentiment_score') is not None else None
         entry.sentiment_label = analysis.get('sentiment_label', 'neutral')
-        entry.intensity_score = None  # Set to NULL as requested
+        # Use calculated intensity_score from analysis, but store NULL if it's 0
+        intensity_value = analysis.get('intensity_score')
+        if intensity_value is not None:
+            intensity_float = float(intensity_value)
+            # Store NULL in database if intensity is 0, otherwise store the actual value
+            entry.intensity_score = None if intensity_float == 0.0 else intensity_float
+        else:
+            entry.intensity_score = None
         entry.key_themes = analysis.get('key_themes', [])
         entry.detected_emotions = analysis.get('detected_emotions', [])
         entry.risk_flags = analysis.get('risk_flags', {})
