@@ -28,7 +28,17 @@ const Insights = () => {
 
       if (last7Days.length > 0) {
         const avgSentiment = last7Days.reduce((sum, e) => sum + e.sentiment_score, 0) / last7Days.length
-        const avgIntensity = last7Days.reduce((sum, e) => sum + e.intensity_score, 0) / last7Days.length
+        // Calculate intensity from detected emotions for each entry
+        const intensities = last7Days.map(e => {
+          // Skip positive sentiment entries
+          if (e.sentiment_score > 0) return null;
+          // Calculate from detected emotions
+          if (e.detected_emotions && e.detected_emotions.length > 0) {
+            return e.detected_emotions.reduce((sum, emotion) => sum + emotion.confidence, 0) / e.detected_emotions.length;
+          }
+          return null;
+        }).filter(i => i !== null);
+        const avgIntensity = intensities.length > 0 ? intensities.reduce((sum, i) => sum + i, 0) / intensities.length : 0;
         const riskCount = last7Days.filter(e => e.risk_flags && Object.values(e.risk_flags).some(v => v)).length
         const themes = {}
         last7Days.forEach(e => {
