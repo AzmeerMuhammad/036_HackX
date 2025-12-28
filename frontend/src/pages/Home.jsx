@@ -1,15 +1,28 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 
 const Home = () => {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [showPatientHistory, setShowPatientHistory] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
   const [aiSummary, setAiSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
+
+  // Redirect professionals to their dashboard
+  useEffect(() => {
+    const isProfessional = user?.is_professional ||
+                          user?.role === 'professional' ||
+                          user?.user_type === 'professional' ||
+                          user?.professional_type
+    
+    if (isProfessional) {
+      navigate('/professional/dashboard', { replace: true })
+    }
+  }, [user, navigate])
 
   // Mock patient data for professionals
   const mockPatients = [
@@ -179,88 +192,219 @@ const Home = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto">
-        {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Hero Section - Apple Style */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+          className="text-center mb-20 sm:mb-24 pt-8 sm:pt-12"
         >
-          <h1 className="text-5xl font-bold mb-4 flex items-center justify-center gap-3" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>
-            <span>Welcome back, {user?.display_name || user?.username}!</span>
-            <svg className="w-12 h-12 animate-bounce" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-            </svg>
-          </h1>
-          <p className="text-xl max-w-2xl mx-auto" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.7 }}>
+          <motion.h1 
+            className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6" 
+            style={{ 
+              fontFamily: "'Inter', sans-serif", 
+              fontWeight: 700,
+              color: '#1d1d1f',
+              letterSpacing: '-0.03em',
+              lineHeight: '1.1'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Welcome back,{' '}
+            <span style={{ 
+              background: 'linear-gradient(135deg, #F15A2A 0%, #d14a1f 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              color: 'transparent'
+            }}>
+              {user?.display_name || user?.username}
+            </span>
+          </motion.h1>
+          <motion.p 
+            className="text-lg sm:text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed" 
+            style={{ 
+              fontFamily: "'Inter', sans-serif", 
+              color: '#86868b',
+              fontWeight: 400,
+              letterSpacing: '-0.01em'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
             Your secure AI-powered mental health journaling platform
-          </p>
+          </motion.p>
         </motion.div>
 
-        {/* Main Action Cards */}
+        {/* Main Action Cards - Apple Style */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="grid md:grid-cols-2 gap-8 mb-12"
+          className="grid md:grid-cols-2 gap-6 lg:gap-8 mb-20 sm:mb-24"
         >
           {mainCards.map((card, index) => (
             <motion.div
               key={card.title}
               variants={itemVariants}
-              whileHover={{ y: -8 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -12, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
             >
               <Link
                 to={card.path}
-                className="block card-3d p-8 group relative overflow-hidden"
+                className="block group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-10 sm:p-12 lg:p-14"
+                style={{
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)'
+                }}
               >
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: 'linear-gradient(to bottom right, rgba(241, 90, 42, 0.1), rgba(241, 90, 42, 0.05))' }} />
+                {/* Subtle gradient overlay on hover */}
+                <motion.div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(241, 90, 42, 0.03) 0%, rgba(241, 90, 42, 0.01) 100%)'
+                  }}
+                />
+                
+                {/* Enhanced shadow on hover */}
+                <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                  style={{
+                    boxShadow: '0 20px 60px -12px rgba(241, 90, 42, 0.15), 0 0 0 1px rgba(241, 90, 42, 0.05)'
+                  }}
+                />
+
                 <div className="relative z-10">
-                  <div className="mb-6" style={{ color: '#F15A2A' }}>{card.iconSvg}</div>
-                  <h2 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <motion.div 
+                    className="mb-8" 
+                    style={{ color: '#F15A2A' }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {card.iconSvg}
+                  </motion.div>
+                  <h2 
+                    className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4" 
+                    style={{ 
+                      fontFamily: "'Inter', sans-serif", 
+                      color: '#1d1d1f',
+                      fontWeight: 700,
+                      letterSpacing: '-0.03em',
+                      lineHeight: '1.1'
+                    }}
+                  >
                     {card.title}
                   </h2>
-                  <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F', opacity: 0.7 }}>
+                  <p 
+                    className="text-base sm:text-lg lg:text-xl leading-relaxed mb-6" 
+                    style={{ 
+                      fontFamily: "'Inter', sans-serif", 
+                      color: '#86868b',
+                      fontWeight: 400,
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
                     {card.description}
                   </p>
-                </div>
-                <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#F15A2A' }}>
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  
+                  <motion.div 
+                    className="flex items-center gap-2 text-primary-600 font-semibold text-base sm:text-lg"
+                    initial={{ x: 0 }}
+                    whileHover={{ x: 8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <span>Get started</span>
+                    <motion.svg 
+                      className="w-5 h-5" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                      initial={{ x: 0 }}
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </motion.svg>
+                  </motion.div>
                 </div>
               </Link>
             </motion.div>
           ))}
         </motion.div>
 
-        {/* Quick Links */}
+        {/* Quick Links - Apple Style */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-8"
+          transition={{ delay: 0.4, duration: 0.8 }}
+          className="mb-20 sm:mb-24"
         >
-          <h3 className="text-2xl font-semibold mb-6 text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+          <motion.h3 
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-8 sm:mb-12 text-center" 
+            style={{ 
+              fontFamily: "'Inter', sans-serif", 
+              color: '#1d1d1f',
+              fontWeight: 700,
+              letterSpacing: '-0.03em'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
             Quick Access
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          </motion.h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {quickLinks.map((link, index) => (
               <motion.div
                 key={link.title}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.6 + index * 0.1, duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                whileHover={{ y: -8, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 <Link
                   to={link.path}
-                  className="block card-3d p-6 text-center group"
+                  className="block group relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-6 sm:p-8 text-center"
+                  style={{
+                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03)'
+                  }}
                 >
-                  <div className="mb-3 transition-colors" style={{ color: '#F15A2A' }}>{link.iconSvg}</div>
-                  <h4 className="font-semibold transition-colors" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  {/* Hover gradient */}
+                  <motion.div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(241, 90, 42, 0.05) 0%, rgba(241, 90, 42, 0.02) 100%)'
+                    }}
+                  />
+
+                  {/* Enhanced shadow on hover */}
+                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                    style={{
+                      boxShadow: '0 12px 40px -8px rgba(241, 90, 42, 0.12)'
+                    }}
+                  />
+
+                  <motion.div 
+                    className="mb-4 sm:mb-6 transition-colors relative z-10" 
+                    style={{ color: '#F15A2A' }}
+                    whileHover={{ scale: 1.15 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {link.iconSvg}
+                  </motion.div>
+                  <h4 
+                    className="font-semibold text-base sm:text-lg transition-colors relative z-10" 
+                    style={{ 
+                      fontFamily: "'Inter', sans-serif", 
+                      color: '#1d1d1f',
+                      fontWeight: 600,
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
                     {link.title}
                   </h4>
                 </Link>
@@ -269,20 +413,42 @@ const Home = () => {
           </div>
         </motion.div>
 
-        {/* Info Banner */}
+        {/* Info Banner - Apple Style */}
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="card-3d p-6 border-2"
-          style={{ background: 'rgba(241, 90, 42, 0.05)', borderColor: 'rgba(241, 90, 42, 0.2)' }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-50/60 to-primary-100/40 border border-primary-200/50 p-8 sm:p-10 lg:p-12"
+          style={{
+            boxShadow: '0 4px 20px rgba(241, 90, 42, 0.1), 0 1px 3px rgba(241, 90, 42, 0.05)'
+          }}
         >
-          <div className="flex items-center justify-center space-x-3">
-            <svg className="w-6 h-6" fill="none" stroke="#F15A2A" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-            <p className="text-center" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-              <span className="font-semibold">Your privacy matters.</span> All your data is encrypted and secure.
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 relative z-10">
+            <motion.div
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center" 
+                style={{ 
+                  background: 'linear-gradient(135deg, #F15A2A 0%, #d14a1f 100%)',
+                  boxShadow: '0 4px 12px rgba(241, 90, 42, 0.25)'
+                }}>
+                <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            </motion.div>
+            <p 
+              className="text-center sm:text-left text-base sm:text-lg lg:text-xl" 
+              style={{ 
+                fontFamily: "'Inter', sans-serif", 
+                color: '#92400E',
+                fontWeight: 500,
+                letterSpacing: '-0.01em'
+              }}
+            >
+              <span className="font-bold" style={{ color: '#78350f' }}>Your privacy matters.</span>{' '}
+              <span style={{ opacity: 0.9 }}>All your data is encrypted and secure.</span>
             </p>
           </div>
         </motion.div>

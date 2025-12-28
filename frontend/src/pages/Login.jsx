@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { authAPI } from '../api/auth'
 import { motion } from 'framer-motion'
+import safespaceLogo from '../assets/safespace_logo.png'
 
 const Login = () => {
   const [username, setUsername] = useState('')
@@ -167,9 +168,12 @@ const Login = () => {
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
               className="inline-block mb-4"
             >
-              <div className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-xl mx-auto" style={{ background: '#F15A2A' }}>
-                <span className="text-white text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif" }}>S</span>
-              </div>
+              <img 
+                src={safespaceLogo} 
+                alt="SafeSpace" 
+                className="h-20 sm:h-24 md:h-28 w-auto object-contain mx-auto"
+                style={{ maxWidth: '240px' }}
+              />
             </motion.div>
             <h2 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>
               Welcome Back

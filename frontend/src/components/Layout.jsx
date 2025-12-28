@@ -3,12 +3,22 @@ import { useAuth } from '../contexts/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import ProfileDashboard from './ProfileDashboard'
+import safespaceLogo from '../assets/safespace_logo.png'
 
 const Layout = ({ children }) => {
   const { user, logout, setUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [showProfileDashboard, setShowProfileDashboard] = useState(false)
+
+  // Check if user is a professional
+  const isProfessional = user?.is_professional ||
+                        user?.role === 'professional' ||
+                        user?.user_type === 'professional' ||
+                        user?.professional_type
+
+  // Determine dashboard path based on user type
+  const dashboardPath = isProfessional ? '/professional/dashboard' : '/home'
 
   // Determine if back button should be shown (not on Home or ProfessionalDashboard pages)
   const showBackButton = location.pathname !== '/home' && location.pathname !== '/professional/dashboard'
@@ -32,16 +42,36 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <Link to="/home" className="flex items-center space-x-3">
+              <Link to={dashboardPath} className="flex items-center">
                 <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center space-x-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center"
+                  style={{ gap: '0.125rem' }}
                 >
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: '#F15A2A' }}>
-                    <span className="text-white text-xl font-bold">S</span>
-                  </div>
-                  <span className="text-2xl font-bold hidden sm:block" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                  <img 
+                    src={safespaceLogo} 
+                    alt="SafeSpace" 
+                    className="h-14 sm:h-16 md:h-20 w-auto object-contain"
+                    style={{ maxWidth: '220px' }}
+                  />
+                  <span 
+                    className="text-2xl sm:text-3xl md:text-4xl font-bold hidden sm:inline-block" 
+                    style={{ 
+                      fontFamily: "'Inter', sans-serif", 
+                      background: 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                      fontWeight: 800,
+                      letterSpacing: '-0.05em',
+                      lineHeight: '1',
+                      textRendering: 'optimizeLegibility',
+                      WebkitFontSmoothing: 'antialiased',
+                      MozOsxFontSmoothing: 'grayscale'
+                    }}
+                  >
                     SafeSpace
                   </span>
                 </motion.div>
