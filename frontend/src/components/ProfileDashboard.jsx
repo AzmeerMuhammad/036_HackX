@@ -138,6 +138,7 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
         const moodCounts = {}
         let totalSentiment = 0
         let totalIntensity = 0
+        let intensityCount = 0
         const recentMoods = []
 
         entries.forEach(entry => {
@@ -145,14 +146,21 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
             moodCounts[entry.checkin_mood] = (moodCounts[entry.checkin_mood] || 0) + 1
           }
           totalSentiment += entry.sentiment_score || 0
-          totalIntensity += entry.intensity_score || 0
+
+          // Calculate intensity from detected emotions
+          let entryIntensity = null;
+          if (entry.sentiment_score <= 0 && entry.detected_emotions && entry.detected_emotions.length > 0) {
+            entryIntensity = entry.detected_emotions.reduce((sum, e) => sum + e.confidence, 0) / entry.detected_emotions.length;
+            totalIntensity += entryIntensity;
+            intensityCount++;
+          }
 
           if (recentMoods.length < 10) {
             recentMoods.push({
               date: entry.created_at,
               mood: entry.checkin_mood,
               sentiment: entry.sentiment_score,
-              intensity: entry.intensity_score
+              intensity: entryIntensity
             })
           }
         })
@@ -161,7 +169,7 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
           totalEntries,
           dailyStreak: streak,
           avgSentiment: (totalSentiment / totalEntries).toFixed(2),
-          avgIntensity: (totalIntensity / totalEntries).toFixed(2),
+          avgIntensity: intensityCount > 0 ? (totalIntensity / intensityCount).toFixed(2) : 'NA',
           lastEntryDate: sortedEntries[0].created_at
         })
 
@@ -501,7 +509,7 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
                               Sentiment: {entry.sentiment?.toFixed(2)}
                             </p>
                             <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
-                              Intensity: {entry.intensity?.toFixed(2)}
+                              Intensity: {entry.intensity != null && entry.intensity !== undefined ? entry.intensity.toFixed(2) : 'NA'}
                             </p>
                           </div>
                         </div>

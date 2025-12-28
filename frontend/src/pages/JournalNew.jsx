@@ -420,9 +420,19 @@ const JournalNew = () => {
               <div className="card-3d p-6 text-center">
                 <div className="text-sm mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Intensity Score</div>
                 <div className="text-4xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>
-                  {result.intensity_score != null && result.intensity_score !== undefined && result.intensity_score !== 0
-                    ? result.intensity_score.toFixed(2)
-                    : 'NA'}
+                  {(() => {
+                    // Show NA if sentiment is positive
+                    if (result.sentiment_score > 0) {
+                      return 'NA';
+                    }
+                    // Calculate intensity as average of detected emotion confidences
+                    if (result.detected_emotions && result.detected_emotions.length > 0) {
+                      const avgConfidence = result.detected_emotions.reduce((sum, e) => sum + e.confidence, 0) / result.detected_emotions.length;
+                      return avgConfidence.toFixed(2);
+                    }
+                    // No emotions detected, show NA
+                    return 'NA';
+                  })()}
                 </div>
                 <div className="text-xs text-gray-500 mt-2">
                   Emotional intensity

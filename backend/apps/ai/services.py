@@ -58,6 +58,9 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
                         }
                         for e in emotion_results
                     ]
+                    # Calculate intensity as average of emotion confidences
+                    if detected_emotions:
+                        intensity_score = sum(e['confidence'] for e in detected_emotions) / len(detected_emotions)
                 except Exception as e:
                     print(f"Warning: Emotion prediction failed: {e}")
                     detected_emotions = []
@@ -91,14 +94,8 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
         else:
             sentiment_label = 'neutral'
     
-    # Intensity analysis (based on intensifiers and exclamation marks)
-    intensifiers = ['very', 'extremely', 'incredibly', 'absolutely', 'completely', 'totally', 'really', 'so', 'too']
-    intensity_count = sum(1 for word in intensifiers if word in text_lower)
-    exclamation_count = text.count('!')
-    caps_ratio = sum(1 for c in text if c.isupper()) / max(len(text), 1)
-    
-    # Calculate intensity score (always returns a value between 0.0 and 1.0)
-    intensity_score = min(1.0, max(0.0, (intensity_count * 0.1 + exclamation_count * 0.05 + caps_ratio * 0.3)))
+    # Intensity score will be calculated later based on detected emotions
+    intensity_score = None
     
     # Key themes detection
     themes = []
@@ -190,19 +187,24 @@ def analyze_journal(text: str, last_7_days_entries: List) -> Dict[str, Any]:
     # Suggest chat if risk flags or negative trend
     suggest_start_chat = (
         any(risk_flags.values()) or
-        (sentiment_score < -0.5 and intensity_score > 0.5) or
+        (sentiment_score < -0.5 and intensity_score is not None and intensity_score > 0.5) or
         recent_negative_trend
     )
-    
-    # Ensure intensity_score is always a valid float
-    intensity_score = float(intensity_score) if intensity_score is not None else 0.0
-    intensity_score = max(0.0, min(1.0, intensity_score))  # Clamp between 0.0 and 1.0
-    
+
+    # Handle intensity_score based on sentiment
+    # For positive sentiment, keep as None (will show as "NA")
+    # For negative/neutral sentiment, ensure it's valid
+    if sentiment_label == 'positive':
+        intensity_score = None
+    elif intensity_score is not None:
+        intensity_score = max(0.0, min(1.0, float(intensity_score)))  # Clamp between 0.0 and 1.0
+        intensity_score = round(intensity_score, 2)
+
     return {
         'ai_summary': summary,
         'sentiment_score': round(float(sentiment_score), 2),
         'sentiment_label': sentiment_label or 'neutral',
-        'intensity_score': round(intensity_score, 2),
+        'intensity_score': intensity_score,  # None for positive, float for negative/neutral
         'key_themes': themes[:5],  # Top 5 themes
         'detected_emotions': detected_emotions,  # Emotions from ML model (if negative)
         'risk_flags': risk_flags,

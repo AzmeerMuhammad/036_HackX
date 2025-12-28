@@ -155,11 +155,31 @@ const JournalHistory = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   ),
-                  render: (value) => (
-                    <span className="font-bold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
-                      {value != null && value !== undefined && value !== 0 ? value.toFixed(2) : 'NA'}
-                    </span>
-                  )
+                  render: (value, row) => {
+                    // Show NA if sentiment is positive
+                    if (row.sentiment_score > 0) {
+                      return (
+                        <span className="font-bold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
+                          NA
+                        </span>
+                      );
+                    }
+                    // Calculate intensity as average of detected emotion confidences
+                    if (row.detected_emotions && row.detected_emotions.length > 0) {
+                      const avgConfidence = row.detected_emotions.reduce((sum, e) => sum + e.confidence, 0) / row.detected_emotions.length;
+                      return (
+                        <span className="font-bold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
+                          {avgConfidence.toFixed(2)}
+                        </span>
+                      );
+                    }
+                    // No emotions detected, show NA
+                    return (
+                      <span className="font-bold text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#F15A2A' }}>
+                        NA
+                      </span>
+                    );
+                  }
                 },
                 {
                   key: 'key_themes',
