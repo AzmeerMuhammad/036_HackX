@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import TherapyAnimation from "../components/ui/therapy-animation";
 import { cn } from "../lib/utils";
+import HelpDrawer from "../components/HelpDrawer";
 
 const defaultAnimationConfig = {
   positions: [
@@ -577,8 +578,11 @@ export default function Landing() {
   ];
 
   return (
-    <ScrollTherapy
-      sections={therapySections}
-    />
+    <>
+      <ScrollTherapy
+        sections={therapySections}
+      />
+      <HelpDrawer />
+    </>
   );
 }
