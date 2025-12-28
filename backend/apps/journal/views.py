@@ -34,4 +34,15 @@ class JournalEntryDetailView(generics.RetrieveDestroyAPIView):
     
     def get_queryset(self):
         return JournalEntry.objects.filter(user=self.request.user)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete a journal entry from the database."""
+        instance = self.get_object()
+        entry_id = instance.id
+        # Perform the deletion (this calls perform_destroy which deletes from database)
+        self.perform_destroy(instance)
+        return Response(
+            {'message': f'Journal entry {entry_id} deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
 

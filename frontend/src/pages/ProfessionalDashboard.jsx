@@ -16,7 +16,7 @@ const ProfessionalDashboard = () => {
   const [checkingVerification, setCheckingVerification] = useState(true)
 
   // Tab State
-  const [activeTab, setActiveTab] = useState('patients') // patients, availability, escalations
+  const [activeTab, setActiveTab] = useState('patients') // patients, escalations, sops
 
   // Modal State for Patient History
   const [showPatientHistoryModal, setShowPatientHistoryModal] = useState(false)
@@ -39,6 +39,18 @@ const ProfessionalDashboard = () => {
   const [aiSummary, setAiSummary] = useState(null)
   const [loadingSummary, setLoadingSummary] = useState(false)
   const [newPatientsCount, setNewPatientsCount] = useState(0)
+
+  // SOPs State
+  const [sops, setSops] = useState([])
+  const [loadingSOPs, setLoadingSOPs] = useState(false)
+  const [showSOPForm, setShowSOPForm] = useState(false)
+  const [editingSOP, setEditingSOP] = useState(null)
+  const [sopFormData, setSopFormData] = useState({
+    title: '',
+    category: '',
+    content: '',
+    active: true
+  })
 
   // Availability State
   const [availability, setAvailability] = useState({
@@ -141,6 +153,80 @@ const ProfessionalDashboard = () => {
     // Cleanup interval on unmount
     return () => clearInterval(interval)
   }, [])
+
+  // Load SOPs when SOPs tab is active
+  useEffect(() => {
+    if (activeTab === 'sops') {
+      loadSOPs()
+    }
+  }, [activeTab])
+
+  const loadSOPs = async () => {
+    try {
+      setLoadingSOPs(true)
+      const response = await professionalsAPI.getSOPs()
+      setSOPs(response.data || [])
+    } catch (err) {
+      console.error('Error loading SOPs:', err)
+      alert(err.response?.data?.error || 'Failed to load SOPs')
+    } finally {
+      setLoadingSOPs(false)
+    }
+  }
+
+  const handleCreateSOP = () => {
+    setEditingSOP(null)
+    setSopFormData({
+      title: '',
+      category: '',
+      content: '',
+      active: true
+    })
+    setShowSOPForm(true)
+  }
+
+  const handleEditSOP = (sop) => {
+    setEditingSOP(sop)
+    setSopFormData({
+      title: sop.title,
+      category: sop.category,
+      content: sop.content,
+      active: sop.active
+    })
+    setShowSOPForm(true)
+  }
+
+  const handleSaveSOP = async (e) => {
+    e.preventDefault()
+    try {
+      if (editingSOP) {
+        await professionalsAPI.updateSOP(editingSOP.id, sopFormData)
+        alert('SOP updated successfully!')
+      } else {
+        await professionalsAPI.createSOP(sopFormData)
+        alert('SOP created successfully!')
+      }
+      setShowSOPForm(false)
+      loadSOPs()
+    } catch (err) {
+      console.error('Error saving SOP:', err)
+      alert(err.response?.data?.error || err.response?.data?.message || 'Failed to save SOP')
+    }
+  }
+
+  const handleDeleteSOP = async (sopId) => {
+    if (!window.confirm('Are you sure you want to delete this SOP? This action cannot be undone.')) {
+      return
+    }
+    try {
+      await professionalsAPI.deleteSOP(sopId)
+      alert('SOP deleted successfully!')
+      loadSOPs()
+    } catch (err) {
+      console.error('Error deleting SOP:', err)
+      alert(err.response?.data?.error || 'Failed to delete SOP')
+    }
+  }
 
   const loadEscalations = async () => {
     try {
@@ -263,6 +349,11 @@ const ProfessionalDashboard = () => {
     { id: 'escalations', label: 'Escalations', icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    )},
+    { id: 'sops', label: 'SOPs', icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     )}
   ]
@@ -812,6 +903,247 @@ const ProfessionalDashboard = () => {
                   </div>
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'sops' && (
+            <motion.div
+              key="sops"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="space-y-6"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-3" style={{ fontFamily: "'Inter', sans-serif", color: '#1d1d1f', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span>Standard Operating Procedures (SOPs)</span>
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleCreateSOP}
+                  className="px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2"
+                  style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Create SOP</span>
+                </motion.button>
+              </div>
+
+              {showSOPForm && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-2xl shadow-lg p-6 mb-6 border-2"
+                  style={{ borderColor: '#F15A2A' }}
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                      {editingSOP ? 'Edit SOP' : 'Create New SOP'}
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setShowSOPForm(false)
+                        setEditingSOP(null)
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveSOP} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Title *
+                      </label>
+                      <input
+                        type="text"
+                        value={sopFormData.title}
+                        onChange={(e) => setSopFormData({ ...sopFormData, title: e.target.value })}
+                        placeholder="e.g., Handling Anxiety Attacks"
+                        required
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-F15A2A"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Category *
+                      </label>
+                      <select
+                        value={sopFormData.category}
+                        onChange={(e) => setSopFormData({ ...sopFormData, category: e.target.value })}
+                        required
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-F15A2A"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      >
+                        <option value="">Select a category</option>
+                        <option value="anxiety">Anxiety</option>
+                        <option value="depression">Depression</option>
+                        <option value="self-harm-risk">Self-Harm Risk</option>
+                        <option value="panic">Panic Attacks</option>
+                        <option value="stress">Stress Management</option>
+                        <option value="relationships">Relationships</option>
+                        <option value="general">General Support</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Content / Guidelines *
+                      </label>
+                      <textarea
+                        value={sopFormData.content}
+                        onChange={(e) => setSopFormData({ ...sopFormData, content: e.target.value })}
+                        placeholder="Enter the SOP guidelines and instructions for the chatbot..."
+                        required
+                        rows={8}
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-F15A2A resize-y"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                      />
+                      <p className="text-xs mt-1" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>
+                        These guidelines will be used by the chatbot to provide appropriate responses. Be clear and specific.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="sop-active"
+                        checked={sopFormData.active}
+                        onChange={(e) => setSopFormData({ ...sopFormData, active: e.target.checked })}
+                        className="w-5 h-5 rounded"
+                        style={{ accentColor: '#F15A2A' }}
+                      />
+                      <label htmlFor="sop-active" className="text-sm font-medium" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        Active (SOP will be used by chatbot)
+                      </label>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="submit"
+                        className="flex-1 px-6 py-3 rounded-xl font-medium transition-all"
+                        style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                      >
+                        {editingSOP ? 'Update SOP' : 'Create SOP'}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        type="button"
+                        onClick={() => {
+                          setShowSOPForm(false)
+                          setEditingSOP(null)
+                        }}
+                        className="px-6 py-3 rounded-xl font-medium transition-all border-2 border-gray-300"
+                        style={{ background: 'white', color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }}
+                      >
+                        Cancel
+                      </motion.button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+
+              {loadingSOPs ? (
+                <div className="flex justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#F15A2A' }}></div>
+                </div>
+              ) : sops.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-lg mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b' }}>
+                    No SOPs created yet. Create your first SOP to guide the chatbot's responses.
+                  </p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleCreateSOP}
+                    className="px-6 py-3 rounded-xl font-medium transition-all"
+                    style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    Create Your First SOP
+                  </motion.button>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-6">
+                  {sops.map((sop) => (
+                    <motion.div
+                      key={sop.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-2xl shadow-lg p-6 border-2"
+                      style={{ 
+                        borderColor: sop.active ? '#10B981' : '#E5E7EB',
+                        fontFamily: "'Inter', sans-serif"
+                      }}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-xl font-semibold" style={{ color: '#3F3F3F' }}>
+                              {sop.title}
+                            </h3>
+                            {sop.active ? (
+                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                                Active
+                              </span>
+                            ) : (
+                              <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">
+                                Inactive
+                              </span>
+                            )}
+                          </div>
+                          <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium capitalize">
+                            {sop.category.replace('-', ' ')}
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditSOP(sop)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Edit SOP"
+                          >
+                            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSOP(sop.id)}
+                            className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete SOP"
+                          >
+                            <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm mb-4 line-clamp-3" style={{ color: '#6B7280' }}>
+                        {sop.content}
+                      </p>
+                      <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                        Created: {new Date(sop.created_at).toLocaleDateString()}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

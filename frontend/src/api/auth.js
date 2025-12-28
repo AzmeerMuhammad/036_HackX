@@ -5,5 +5,6 @@ export const authAPI = {
   login: (data) => api.post('/auth/login/', data),
   me: () => api.get('/auth/me/'),
   updateMe: (data) => api.patch('/auth/me/', data),
+  deleteAccount: () => api.delete('/auth/me/'),
 }
 

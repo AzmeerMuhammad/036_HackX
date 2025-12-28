@@ -16,5 +16,10 @@ export const professionalsAPI = {
   getEscalationDetail: (id) => api.get(`/professionals/escalations/${id}/`),
   submitVerdict: (id, data) => api.post(`/professionals/escalations/${id}/verdict/`, data),
   myEscalations: () => api.get('/professionals/escalations/mine/'),
+  // SOP Management
+  getSOPs: () => api.get('/professionals/sops/'),
+  createSOP: (data) => api.post('/professionals/sops/', data),
+  updateSOP: (id, data) => api.put(`/professionals/sops/${id}/`, data),
+  deleteSOP: (id) => api.delete(`/professionals/sops/${id}/`),
 }
 

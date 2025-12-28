@@ -26,13 +26,16 @@ const JournalHistory = () => {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this entry?')) return
+    if (!window.confirm('Are you sure you want to delete this entry? This action cannot be undone.')) return
 
     try {
       await journalAPI.delete(id)
+      // Remove from local state - entry is deleted from database
       setEntries(entries.filter(e => e.id !== id))
+      setError('') // Clear any previous errors
     } catch (err) {
-      setError('Failed to delete entry')
+      console.error('Delete error:', err)
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to delete entry. Please try again.')
     }
   }
 

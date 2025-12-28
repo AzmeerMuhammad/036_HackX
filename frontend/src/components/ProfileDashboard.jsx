@@ -33,6 +33,11 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
   const [professionalError, setProfessionalError] = useState('')
   const [professionalSuccess, setProfessionalSuccess] = useState('')
 
+  // Account deletion state
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
   const isProfessional = user?.is_professional || user?.professional_type
 
   useEffect(() => {
@@ -221,6 +226,56 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
       setProfessionalError(errorMsg)
     } finally {
       setProfessionalLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    // First confirmation
+    if (!showDeleteConfirm) {
+      setShowDeleteConfirm(true)
+      return
+    }
+
+    // Second confirmation - user must type DELETE
+    if (deleteConfirmText !== 'DELETE') {
+      setProfileError('Please type DELETE to confirm account deletion')
+      return
+    }
+
+    // Final confirmation dialog
+    const finalConfirm = window.confirm(
+      '⚠️ FINAL WARNING: This will permanently delete your account and all associated data including:\n\n' +
+      '• All journal entries\n' +
+      '• All chat sessions\n' +
+      '• All history reports\n' +
+      '• Professional profile (if applicable)\n' +
+      '• All consents and shared data\n\n' +
+      'This action CANNOT be undone!\n\n' +
+      'Are you absolutely sure you want to delete your account?'
+    )
+
+    if (!finalConfirm) {
+      setShowDeleteConfirm(false)
+      setDeleteConfirmText('')
+      return
+    }
+
+    setDeleteLoading(true)
+    setProfileError('')
+
+    try {
+      await authAPI.deleteAccount()
+      // Account deleted successfully
+      alert('Your account has been permanently deleted. You will be logged out now.')
+      // Logout and redirect
+      onLogout()
+      onClose()
+      // Redirect to landing page
+      window.location.href = '/'
+    } catch (err) {
+      console.error('Delete account error:', err)
+      setProfileError(err.response?.data?.error || err.response?.data?.message || 'Failed to delete account. Please try again.')
+      setDeleteLoading(false)
     }
   }
 
@@ -839,6 +894,89 @@ const ProfileDashboard = ({ user, onClose, onLogout, onUserUpdate }) => {
                   </motion.button>
                 </div>
               </form>
+
+              {/* Account Deletion Section */}
+              <div className="bg-red-50 border-2 border-red-200 p-6 rounded-xl shadow-sm mt-8">
+                <h3 className="text-lg font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#DC2626' }}>
+                  ⚠️ Danger Zone
+                </h3>
+                <p className="text-sm mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#6B7280' }}>
+                  Once you delete your account, there is no going back. All your data including journal entries, chat sessions, and history will be permanently deleted.
+                </p>
+
+                {!showDeleteConfirm ? (
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleDeleteAccount}
+                    className="px-6 py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 border-2 border-red-300 hover:border-red-400"
+                    style={{ background: 'white', color: '#DC2626', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span>Delete My Account</span>
+                  </motion.button>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border-2 border-red-300">
+                      <p className="text-sm font-semibold mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#DC2626' }}>
+                        Type <span className="font-mono bg-red-100 px-2 py-1 rounded">DELETE</span> to confirm:
+                      </p>
+                      <input
+                        type="text"
+                        value={deleteConfirmText}
+                        onChange={(e) => {
+                          setDeleteConfirmText(e.target.value)
+                          setProfileError('')
+                        }}
+                        placeholder="Type DELETE here"
+                        className="w-full px-4 py-2 border-2 border-red-200 rounded-lg focus:outline-none focus:border-red-400"
+                        style={{ fontFamily: "'Inter', sans-serif" }}
+                        autoFocus
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleDeleteAccount}
+                        disabled={deleteLoading || deleteConfirmText !== 'DELETE'}
+                        className="flex-1 px-6 py-3 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        style={{ background: '#DC2626', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                      >
+                        {deleteLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                            <span>Deleting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span>Permanently Delete Account</span>
+                          </>
+                        )}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          setShowDeleteConfirm(false)
+                          setDeleteConfirmText('')
+                          setProfileError('')
+                        }}
+                        disabled={deleteLoading}
+                        className="px-6 py-3 rounded-xl font-medium transition-all border-2 border-gray-300 hover:border-gray-400"
+                        style={{ background: 'white', color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }}
+                      >
+                        Cancel
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
         </div>

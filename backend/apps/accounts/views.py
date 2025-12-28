@@ -96,10 +96,10 @@ def login_view(request):
     )
 
 
-@api_view(['GET', 'PATCH'])
+@api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def me_view(request):
-    """Get or update current user info."""
+    """Get, update, or delete current user info."""
     if request.method == 'GET':
         return Response(UserSerializer(request.user).data)
 
@@ -127,4 +127,17 @@ def me_view(request):
 
         user.save()
         return Response(UserSerializer(user).data)
+    
+    elif request.method == 'DELETE':
+        """Delete the current user's account and all associated data."""
+        user = request.user
+        username = user.username
+        
+        # Delete the user (cascade will handle related data)
+        user.delete()
+        
+        return Response(
+            {'message': f'Account {username} has been permanently deleted'},
+            status=status.HTTP_200_OK
+        )
 

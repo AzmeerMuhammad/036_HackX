@@ -2,10 +2,11 @@ from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Professional, EscalationTicket
+from .models import Professional, EscalationTicket, ProfessionalSOPDoc
 from .serializers import (
     ProfessionalSerializer, ProfessionalApplySerializer, 
-    EscalationTicketSerializer, EscalationVerdictSerializer
+    EscalationTicketSerializer, EscalationVerdictSerializer,
+    ProfessionalSOPDocSerializer
 )
 
 
@@ -539,3 +540,80 @@ def professional_patient_summary(request, user_id):
         'totalEntries': total_entries,
         'entriesAnalyzed': len(recent_entries)
     })
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def professional_sops(request):
+    """List or create SOP documents for the authenticated professional."""
+    try:
+        professional = request.user.professional_profile
+        if not professional.verified:
+            return Response(
+                {'error': 'Only verified professionals can manage SOPs'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+    except Professional.DoesNotExist:
+        return Response(
+            {'error': 'You are not a professional'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    if request.method == 'GET':
+        """List all SOPs created by this professional."""
+        sops = ProfessionalSOPDoc.objects.filter(
+            created_by_professional=professional
+        ).order_by('-created_at')
+        serializer = ProfessionalSOPDocSerializer(sops, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        """Create a new SOP document."""
+        serializer = ProfessionalSOPDocSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        sop = serializer.save(created_by_professional=professional)
+        return Response(
+            ProfessionalSOPDocSerializer(sop).data,
+            status=status.HTTP_201_CREATED
+        )
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def professional_sop_detail(request, sop_id):
+    """Get, update, or delete a specific SOP document."""
+    try:
+        professional = request.user.professional_profile
+        if not professional.verified:
+            return Response(
+                {'error': 'Only verified professionals can manage SOPs'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+    except Professional.DoesNotExist:
+        return Response(
+            {'error': 'You are not a professional'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    sop = get_object_or_404(
+        ProfessionalSOPDoc,
+        id=sop_id,
+        created_by_professional=professional
+    )
+    
+    if request.method == 'GET':
+        serializer = ProfessionalSOPDocSerializer(sop)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = ProfessionalSOPDocSerializer(sop, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        sop = serializer.save()
+        return Response(ProfessionalSOPDocSerializer(sop).data)
+    
+    elif request.method == 'DELETE':
+        sop.delete()
+        return Response(
+            {'message': 'SOP deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )

@@ -4,7 +4,7 @@ from .views import (
     my_escalations, professional_escalations,
     professional_escalation_detail, professional_escalation_verdict,
     professional_patients, professional_profile, professional_patient_summary,
-    verify_professional
+    verify_professional, professional_sops, professional_sop_detail
 )
 
 urlpatterns = [
@@ -17,6 +17,8 @@ urlpatterns = [
     path('escalations/', professional_escalations, name='professional-escalations'),
     path('escalations/<int:ticket_id>/', professional_escalation_detail, name='professional-escalation-detail'),
     path('escalations/<int:ticket_id>/verdict/', professional_escalation_verdict, name='professional-escalation-verdict'),
+    path('sops/', professional_sops, name='professional-sops'),
+    path('sops/<int:sop_id>/', professional_sop_detail, name='professional-sop-detail'),
 ]
 
 # Escalations endpoints (user-facing)
