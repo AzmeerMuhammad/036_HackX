@@ -280,76 +280,161 @@ const ProfessionalDashboard = () => {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
+        {/* Header - Apple Style */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+          className="mb-12 sm:mb-16 pt-8 sm:pt-12"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <svg className="w-10 h-10" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <h1 className="text-4xl font-bold" style={{ fontFamily: "'Inter', sans-serif", fontWeight: 800, color: '#3F3F3F' }}>Professional Dashboard</h1>
-          </div>
-          <p style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Manage your patients, availability, and escalations</p>
+          <motion.h1 
+            className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6" 
+            style={{ 
+              fontFamily: "'Inter', sans-serif", 
+              fontWeight: 700,
+              color: '#1d1d1f',
+              letterSpacing: '-0.03em',
+              lineHeight: '1.1'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Professional Dashboard
+          </motion.h1>
+          <motion.p 
+            className="text-lg sm:text-xl md:text-2xl" 
+            style={{ 
+              fontFamily: "'Inter', sans-serif", 
+              color: '#86868b',
+              fontWeight: 400,
+              letterSpacing: '-0.01em'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            Manage your patients, availability, and escalations
+          </motion.p>
         </motion.div>
 
-        {/* Quick Access Tiles */}
+        {/* Quick Access Tiles - Apple Style */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="mb-12 sm:mb-16"
         >
-          <h2 className="text-xl font-semibold mb-4" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Quick Access</h2>
-          <div className="grid md:grid-cols-2 gap-6">
+          <motion.h2 
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-8 sm:mb-12" 
+            style={{ 
+              fontFamily: "'Inter', sans-serif", 
+              color: '#1d1d1f',
+              fontWeight: 700,
+              letterSpacing: '-0.03em'
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            Quick Access
+          </motion.h2>
+          <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
             <motion.div
-              whileHover={{ y: -8, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -12, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
               onClick={() => setShowPatientHistoryModal(true)}
-              className="card-3d p-8 cursor-pointer group relative overflow-hidden"
+              className="cursor-pointer group relative overflow-hidden rounded-3xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-10 sm:p-12 lg:p-14"
+              style={{
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05)'
+              }}
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300" style={{ background: 'rgba(241, 90, 42, 0.05)' }} />
+              {/* Subtle gradient overlay on hover */}
+              <motion.div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(241, 90, 42, 0.03) 0%, rgba(241, 90, 42, 0.01) 100%)'
+                }}
+              />
+              
+              {/* Enhanced shadow on hover */}
+              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"
+                style={{
+                  boxShadow: '0 20px 60px -12px rgba(241, 90, 42, 0.15), 0 0 0 1px rgba(241, 90, 42, 0.05)'
+                }}
+              />
+
               <div className="relative z-10">
-                <div className="mb-6" style={{ color: '#F15A2A' }}>
-                  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <motion.div 
+                  className="mb-8" 
+                  style={{ color: '#F15A2A' }}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <svg className="w-16 h-16 sm:w-20 sm:h-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
-                </div>
-                <h3 className="text-3xl font-bold mb-3" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>See Patient History</h3>
-                <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>View detailed journal histories and AI insights from patients who have shared their data with you</p>
-              </div>
-              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: '#F15A2A' }}>
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
+                </motion.div>
+                <h3 
+                  className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4" 
+                  style={{ 
+                    fontFamily: "'Inter', sans-serif", 
+                    color: '#1d1d1f',
+                    fontWeight: 700,
+                    letterSpacing: '-0.03em',
+                    lineHeight: '1.1'
+                  }}
+                >
+                  See Patient History
+                </h3>
+                <p 
+                  className="text-base sm:text-lg lg:text-xl leading-relaxed" 
+                  style={{ 
+                    fontFamily: "'Inter', sans-serif", 
+                    color: '#86868b',
+                    fontWeight: 400,
+                    letterSpacing: '-0.01em'
+                  }}
+                >
+                  View detailed journal histories and AI insights from patients who have shared their data with you
+                </p>
               </div>
             </motion.div>
           </div>
         </motion.div>
 
-        {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
-          <div className="flex space-x-1">
+        {/* Tabs - Apple Style */}
+        <div className="mb-8 sm:mb-12 border-b border-gray-200/50">
+          <div className="flex space-x-2">
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-2 px-6 py-3 font-medium transition-all rounded-t-lg ${
+                className={`flex items-center gap-2 px-6 py-4 font-semibold transition-all rounded-t-xl ${
                   activeTab === tab.id
                     ? 'border-b-2'
-                    : 'hover:bg-gray-50'
+                    : 'hover:bg-gray-50/50'
                 }`}
                 style={activeTab === tab.id
-                  ? { background: 'rgba(241, 90, 42, 0.05)', color: '#F15A2A', borderColor: '#F15A2A', fontFamily: "'Inter', sans-serif" }
-                  : { color: '#3F3F3F', fontFamily: "'Inter', sans-serif" }
+                  ? { 
+                      background: 'rgba(241, 90, 42, 0.05)', 
+                      color: '#F15A2A', 
+                      borderColor: '#F15A2A', 
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 600
+                    }
+                  : { 
+                      color: '#86868b', 
+                      fontFamily: "'Inter', sans-serif",
+                      fontWeight: 500
+                    }
                 }
               >
                 {tab.icon}
-                <span>{tab.label}</span>
+                <span className="text-base sm:text-lg">{tab.label}</span>
               </motion.button>
             ))}
           </div>
@@ -368,9 +453,9 @@ const ProfessionalDashboard = () => {
             >
               {/* Patients List */}
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                    <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold flex items-center gap-3" style={{ fontFamily: "'Inter', sans-serif", color: '#1d1d1f', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                    <svg className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                     <span>Patients Sharing History</span>
@@ -399,15 +484,15 @@ const ProfessionalDashboard = () => {
                   </button>
                 </div>
                 {loadingPatients ? (
-                  <div className="card-3d p-8 text-center">
-                    <p className="text-gray-600">Loading patients...</p>
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-12 text-center" style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)' }}>
+                    <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b' }}>Loading patients...</p>
                   </div>
                 ) : patients.length === 0 ? (
-                  <div className="card-3d p-8 text-center">
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-12 text-center" style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)' }}>
                     <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                     </svg>
-                    <p className="text-gray-600">No patients have shared their history with you yet.</p>
+                    <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b' }}>No patients have shared their history with you yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -416,8 +501,12 @@ const ProfessionalDashboard = () => {
                         key={patient.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ y: -4 }}
-                        className="card-3d p-6 cursor-pointer"
+                        whileHover={{ y: -6, scale: 1.01 }}
+                        transition={{ duration: 0.3 }}
+                        className="cursor-pointer rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-6 sm:p-8"
+                        style={{
+                          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.03)'
+                        }}
                         onClick={() => setSelectedPatient(patient)}
                       >
                         <div className="flex justify-between items-start mb-3">
@@ -453,16 +542,16 @@ const ProfessionalDashboard = () => {
               <div>
                 {selectedPatient ? (
                   <div className="space-y-4">
-                    <div className="card-3d p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-semibold" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>{selectedPatient.name}</h2>
+                    <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-6 sm:p-8" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "'Inter', sans-serif", color: '#1d1d1f', fontWeight: 700, letterSpacing: '-0.02em' }}>{selectedPatient.name}</h2>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleLoadAISummary(selectedPatient.id)}
                           disabled={loadingSummary}
-                          className="px-4 py-2 flex items-center gap-2 rounded-xl font-medium transition-all"
-                          style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif" }}
+                          className="px-5 py-2.5 flex items-center gap-2 rounded-xl font-semibold transition-all hover:shadow-lg"
+                          style={{ background: '#F15A2A', color: 'white', fontFamily: "'Inter', sans-serif", fontWeight: 600, boxShadow: '0 2px 8px rgba(241, 90, 42, 0.3)' }}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -473,13 +562,13 @@ const ProfessionalDashboard = () => {
 
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="rounded-lg p-3" style={{ background: 'rgba(241, 90, 42, 0.05)' }}>
-                            <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Total Entries</p>
-                            <p className="text-2xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{selectedPatient.entriesCount}</p>
+                          <div className="rounded-xl p-4 sm:p-5 border border-gray-200/50 bg-white/50" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+                            <p className="text-sm sm:text-base mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b', fontWeight: 500 }}>Total Entries</p>
+                            <p className="text-2xl sm:text-3xl font-bold" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>{selectedPatient.entriesCount}</p>
                           </div>
-                          <div className="rounded-lg p-3" style={{ background: 'rgba(241, 90, 42, 0.05)' }}>
-                            <p className="text-sm" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>Risk Level</p>
-                            <p className="text-2xl font-bold capitalize" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif" }}>{selectedPatient.riskLevel}</p>
+                          <div className="rounded-xl p-4 sm:p-5 border border-gray-200/50 bg-white/50" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+                            <p className="text-sm sm:text-base mb-2" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b', fontWeight: 500 }}>Risk Level</p>
+                            <p className="text-2xl sm:text-3xl font-bold capitalize" style={{ color: '#F15A2A', fontFamily: "'Inter', sans-serif", fontWeight: 700 }}>{selectedPatient.riskLevel}</p>
                           </div>
                         </div>
                       </div>
@@ -490,9 +579,10 @@ const ProfessionalDashboard = () => {
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="card-3d p-6 space-y-4"
+                        className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-6 sm:p-8 space-y-6"
+                        style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}
                       >
-                        <h3 className="text-xl font-semibold flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
+                        <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-3" style={{ fontFamily: "'Inter', sans-serif", color: '#1d1d1f', fontWeight: 700, letterSpacing: '-0.02em' }}>
                           <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
@@ -559,11 +649,11 @@ const ProfessionalDashboard = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="card-3d p-8 text-center">
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-12 text-center" style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)' }}>
                     <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    <p className="text-gray-600">Select a patient to view details and generate AI summary</p>
+                    <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b' }}>Select a patient to view details and generate AI summary</p>
                   </div>
                 )}
               </div>
@@ -581,19 +671,19 @@ const ProfessionalDashboard = () => {
             >
               {/* Escalations List */}
               <div>
-                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: "'Inter', sans-serif", color: '#3F3F3F' }}>
-                  <svg className="w-6 h-6" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-3" style={{ fontFamily: "'Inter', sans-serif", color: '#1d1d1f', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                  <svg className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: '#F15A2A' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                   Pending Escalations
                 </h2>
 
                 {escalations.length === 0 ? (
-                  <div className="card-3d p-8 text-center">
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-12 text-center" style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)' }}>
                     <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <p className="text-gray-600">No pending escalations.</p>
+                    <p className="text-lg" style={{ fontFamily: "'Inter', sans-serif", color: '#86868b' }}>No pending escalations.</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -602,8 +692,10 @@ const ProfessionalDashboard = () => {
                         key={ticket.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        whileHover={{ y: -4 }}
-                        className="card-3d p-6 cursor-pointer"
+                        whileHover={{ y: -6, scale: 1.01 }}
+                        transition={{ duration: 0.3 }}
+                        className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-6 sm:p-8 cursor-pointer"
+                        style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)' }}
                         onClick={() => loadTicketDetail(ticket.id)}
                       >
                         <div className="flex justify-between items-start mb-2">
@@ -630,8 +722,8 @@ const ProfessionalDashboard = () => {
               {/* Ticket Detail */}
               <div>
                 {selectedTicket ? (
-                  <div className="card-3d p-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-gray-200/50 p-6 sm:p-8" style={{ boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)' }}>
+                    <h2 className="text-xl sm:text-2xl font-bold mb-6" style={{ fontFamily: "'Inter', sans-serif", color: '#1d1d1f', fontWeight: 700, letterSpacing: '-0.02em' }}>
                       Ticket #{selectedTicket.id}
                     </h2>
                     <div className="space-y-4 mb-6">

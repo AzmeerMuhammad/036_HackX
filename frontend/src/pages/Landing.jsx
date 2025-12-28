@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import TherapyAnimation from "../components/ui/therapy-animation";
 import { cn } from "../lib/utils";
 import HelpDrawer from "../components/HelpDrawer";
+import safespaceLogo from "../assets/safespace_logo.png";
 
 const defaultAnimationConfig = {
   positions: [
@@ -113,8 +114,82 @@ function ScrollTherapy({ sections, animationConfig = defaultAnimationConfig, cla
         background: '#F7F3EC'
       }}
     >
+      {/* Navigation Header */}
+      <motion.nav
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/50"
+        style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16 sm:h-20">
+            <Link to="/" className="flex items-center">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center"
+                style={{ gap: '0.125rem' }}
+              >
+                <img 
+                  src={safespaceLogo} 
+                  alt="SafeSpace" 
+                  className="h-14 sm:h-16 md:h-20 w-auto object-contain"
+                  style={{ maxWidth: '220px' }}
+                />
+                <span 
+                  className="text-2xl sm:text-3xl md:text-4xl font-bold hidden sm:inline-block" 
+                  style={{ 
+                    fontFamily: "'Inter', sans-serif", 
+                    background: 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    color: 'transparent',
+                    fontWeight: 800,
+                    letterSpacing: '-0.05em',
+                    lineHeight: '1',
+                    textRendering: 'optimizeLegibility',
+                    WebkitFontSmoothing: 'antialiased',
+                    MozOsxFontSmoothing: 'grayscale'
+                  }}
+                >
+                  SafeSpace
+                </span>
+              </motion.div>
+            </Link>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm font-medium rounded-lg transition-colors hover:bg-gray-100/50"
+                style={{ 
+                  fontFamily: "'Inter', sans-serif", 
+                  color: '#3F3F3F',
+                  fontWeight: 500
+                }}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="px-4 py-2 text-sm font-semibold rounded-lg transition-all hover:shadow-lg"
+                style={{ 
+                  fontFamily: "'Inter', sans-serif", 
+                  background: '#F15A2A',
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px -2px rgba(241, 90, 42, 0.3)'
+                }}
+              >
+                Get Started
+              </Link>
+            </div>
+          </div>
+        </div>
+      </motion.nav>
+
       {/* Progress Bar - Solid orange */}
-      <div className="fixed top-0 left-0 w-full h-1 bg-gray-200/30 z-50">
+      <div className="fixed top-16 sm:top-20 left-0 w-full h-1 bg-gray-200/30 z-40">
         <div
           className="h-full will-change-transform"
           style={{
